@@ -1,3 +1,29 @@
 body {
   background-color: rgb(255, 232, 208);
 }
+
+.card {
+  position: absolute;
+  width: 200px; /* standard playing cards are 2.5 : 3.5 aspect ratio */
+  height: 280px;
+  border: 3px solid #3c0a06;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: brown;
+  box-shadow: 4px 2px 5px rgba(0,0,0,0.4);
+}
+
+.card.passive {
+  cursor: default;
+}
+
+.card.face-down {
+  border: 3px solid gray;
+  background: repeating-linear-gradient(
+    135deg,
+    #c0c0c0 0,
+    #c0c0c0 16px,
+    #d0d0d0 16px,
+    #d0d0d0 32px
+  );
+}

@@ -27,3 +27,20 @@ body {
     #d0d0d0 32px
   );
 }
+
+#shaft-display {
+  height: 320px; /* has to fit cards */
+  line-height: 320px;
+  width: 100%;
+  margin-top: 140px;
+  padding-left: 30px;
+  background-color: rgba(0,0,0,0.1);
+}
+
+#shaft-display #title {
+  text-transform: uppercase;
+  font-family: 'Alfa Slab One', serif;
+  font-size: 100px;
+  opacity: 0.05;
+  user-select: none;
+}

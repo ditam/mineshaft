@@ -1,6 +1,12 @@
 
-const decks = {
-  shaft: [{}],
+const decks ={
+  shaft: {
+    position: {
+      x: 750,
+      y: 156
+    },
+    cards: [],
+  },
   playerHands: []
 };
 
@@ -34,6 +40,8 @@ $(document).ready(function() {
     console.log('card click, type:', $(this).data('type'));
   });
 
-  createCard(200, 200, true);
-  createCard(550, 250, false);
+  createCard(200, 500, true);
+  createCard(420, 500, true);
+  createCard(640, 500, true);
+  createCard(decks.shaft.position.x, decks.shaft.position.y, false);
 });

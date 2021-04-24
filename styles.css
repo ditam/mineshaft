@@ -1,15 +1,17 @@
 body {
   background-color: rgb(255, 232, 208);
+  user-select: none;
 }
 
 .card {
   position: absolute;
   width: 200px; /* standard playing cards are 2.5 : 3.5 aspect ratio */
   height: 280px;
+  overflow: hidden;
   border: 3px solid #3c0a06;
   border-radius: 8px;
   cursor: pointer;
-  background-color: brown;
+  background-color: #662c1c;;
   box-shadow: 4px 2px 5px rgba(0,0,0,0.4);
 }
 
@@ -26,6 +28,44 @@ body {
     #d0d0d0 16px,
     #d0d0d0 32px
   );
+}
+
+.card .cost {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  background-color: #ffe919;
+  border-radius: 11px;
+  font-size: 16px;
+  text-align: center;
+  font-family: 'Alfa Slab One', serif;
+}
+.card .header {
+  background-color: #c37811;
+  margin-top: 8px;
+  width: 100%;
+  height: 32px;
+  line-height: 32px;
+  font-size: 20px;
+  font-family: 'Alfa Slab One', serif;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+.card img {
+  width: 140px;
+  height: 140px;
+  margin-left: 30px;
+}
+
+.card .description {
+  background-color: #c37811;
+  height: 80px; /* overflow is hidden anyway */
+  padding: 20px;
+  text-align: center;
 }
 
 #shaft-display {

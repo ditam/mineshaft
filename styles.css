@@ -1,6 +1,13 @@
 body {
-  background-color: rgb(255, 232, 208);
   user-select: none;
+}
+
+#play-area {
+  position: relative;
+  background-color: rgb(255, 232, 208);
+  width: 1280px;
+  height: 610px;
+  overflow: hidden;
 }
 
 .card {

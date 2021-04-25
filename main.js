@@ -1,7 +1,7 @@
 
 const decks = {
   player1: {
-    money: 100, // TODO: set to 0 for release...
+    money: 0,
     treasuresTakenThisRound: 0,
     cards: [
       { type: 'tnt' },
@@ -530,7 +530,7 @@ function playCard(cardElement, handIndex) {
   }
 
   // if we reached this point, the card was played - we mark it as played
-  //FIXME cardElement.addClass('face-down');
+  cardElement.addClass('face-down');
 }
 
 (function init() {
@@ -605,7 +605,11 @@ $(document).ready(function() {
     // a buy ends the turn
     // this will update status - both money and carry capacity could have changed
     // we delay a bit to wait for the card move animation
-    setTimeout(endPlayerTurn, 1200);
+    $('.card.mini').removeClass('buyable');
+    setTimeout(function() {
+      $('.card.mini').addClass('buyable');
+      endPlayerTurn();
+    }, 1200);
   });
 
   $('#end-turn-button').on('click', endPlayerTurn);

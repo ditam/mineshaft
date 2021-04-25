@@ -76,8 +76,8 @@ const toolCardTypes = {
   'lantern': {
     assetURL: 'assets/lantern.png',
     cost: 1,
-    description: 'Lanternates.',
-    displayName: 'Look at the top 3 cards of the shaft deck.'
+    description: 'Look at the top 3 cards of the shaft deck.',
+    displayName: 'Lantern'
   },
   'minecart': {
     assetURL: 'assets/minecart.png',

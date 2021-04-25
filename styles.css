@@ -151,6 +151,20 @@ body {
   transform: rotateY(-180deg);
 }
 
+.card.upside-down {
+  /* the need for this rotateY is probably a bug... */
+  transform: rotateY(180deg) rotateX(180deg);
+}
+
+.card.upside-down.sabotage-select {
+  cursor: pointer;
+}
+
+.card.upside-down.sabotage-select:hover {
+  /* NB: remember we are upside-down! */
+  box-shadow: -2px -10px 10px red;
+}
+
 .card.mini {
   transform-origin: top left;
   transform: scale(0.5);

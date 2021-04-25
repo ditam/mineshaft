@@ -3,7 +3,7 @@ const decks = {
   player1: {
     money: 100, // TODO: set to 0 for release...
     cards: [
-      { type: 'minecart' },
+      { type: 'tnt' },
       { type: 'pickaxe' },
       { type: 'sabotage' },
     ]
@@ -165,6 +165,7 @@ function createCard(type, x, y, options) {
   const faceUp = !!options.faceUp;
   const mini = !!options.mini;
   const playable = !!options.playable;
+  const upsideDown = !!options.upsideDown;
 
   const container = $('<div>').addClass('card').css({
     left: x,
@@ -209,6 +210,10 @@ function createCard(type, x, y, options) {
     container.addClass('playable');
   }
 
+  if (upsideDown) {
+    container.addClass('upside-down');
+  }
+
   container.data('type', type);
 
   container.appendTo(playArea);
@@ -243,9 +248,9 @@ function populateCurrentPlayerHand() {
 
 function populateWaitingPlayerHand() {
   const cards = (currentPlayer === 1)? decks.player2.cards : decks.player1.cards;
-  createCard(cards[0].type, 200, -150, {faceUp: false});
-  createCard(cards[0].type, 420, -150, {faceUp: false});
-  createCard(cards[0].type, 640, -150, {faceUp: false});
+  createCard(cards[0].type, 200, -150, {faceUp: false, upsideDown: true});
+  createCard(cards[0].type, 420, -150, {faceUp: false, upsideDown: true});
+  createCard(cards[0].type, 640, -150, {faceUp: false, upsideDown: true});
 }
 
 function populateShaftDeck() {
@@ -356,9 +361,43 @@ function removeError() {
   }
 }
 
+function showSabotageSelector(callback) {
+  const enemyPlayer = (currentPlayer === 1)? decks.player2 : decks.player1;
+  const enemyCards = $('.card.upside-down');
+  enemyCards.addClass('sabotage-select')
+  enemyCards.removeClass('face-down');
+  enemyCards.one('click', function() {
+    // remove card
+    const card = $(this);
+    const handIndex = card.index('.sabotage-select');
+    animateElementRemoval(card);
+    enemyPlayer.cards.splice(handIndex, 1);
+
+    // reset card states
+    enemyCards.addClass('face-down');
+    enemyCards.removeClass('sabotage-select');
+
+    // signal done to caller
+    callback();
+  });
+}
+
+function animateElementRemoval(el) {
+  el.css('left', trashPosition.x);
+  el.css('top', trashPosition.y);
+  setTimeout(function() {
+    el.remove();
+  }, 1200);
+}
+
 function playCard(cardElement, handIndex) {
   const type = cardElement.data('type');
   const cardType = getCardType(type);
+
+  if ($('.sabotage-select').length > 0) {
+    showError('Select a card (above) to sabotage.');
+    return;
+  }
 
   const cardsInShaft = decks.shaft.cards;
   const lastRevealedIndex = cardsInShaft.length-1 - decks.shaft.revealedCount + 1;
@@ -392,13 +431,7 @@ function playCard(cardElement, handIndex) {
       decks.shaft.revealedCount--;
       currentPlayerDeck.cards.splice(handIndex, 1);
       const elementsToRemove = [lastRevealedCard.domElement, firstHiddenCard.domElement, cardElement];
-      elementsToRemove.forEach(el => {
-        el.css('left', trashPosition.x);
-        el.css('top', trashPosition.y);
-        setTimeout(function() {
-          el.remove();
-        }, 1200);
-      });
+      elementsToRemove.forEach(animateElementRemoval);
       // hack: we remove this flag immediately so there's no race condition while
       // the click handler is trying to determine which card index was played from the hand
       cardElement.removeClass('playable');
@@ -406,6 +439,19 @@ function playCard(cardElement, handIndex) {
     case 'minecart':
       showError('This is not an action card. (The bonus is passive.)');
       return;
+    case 'sabotage':
+      const hasTNT = currentPlayerDeck.cards.some(card => {
+        return card.type === 'tnt';
+      });
+      if (!hasTNT) {
+        showError('Needs a TNT card in hand.');
+        return;
+      }
+      showSabotageSelector(function() {
+        currentPlayerDeck.cards.splice(handIndex, 1);
+        animateElementRemoval(cardElement);
+      });
+      break;
     default:
       console.assert(false, 'playCard unknown card type:' + type)
       break;

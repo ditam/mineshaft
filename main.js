@@ -185,8 +185,6 @@ function createCard(type, x, y, options) {
   container.addClass(type);
 
   container.toggleClass('face-down', !faceUp);
-  // for now, every face-down card is passive, but we might change this...
-  container.toggleClass('passive', !faceUp);
 
   const front = $('<div>').addClass('card-face card-front').appendTo(container);
   const back = $('<div>').addClass('card-face card-back').appendTo(container);
@@ -245,21 +243,42 @@ function populateShop() {
   createCard(card.type, 30, shopYPositions[3], {faceUp: true, mini: true});
 }
 
-function populateCurrentPlayerHand() {
-  // TODO: before this becomes reusable we need to clean up old cards or diff
-  const cards = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
-  // TODO: iterate cards properly
-  // TODO: dynamic positions based on hand size
-  createCard(cards[0].type, 200, 500, {faceUp: true, playable: true});
-  createCard(cards[1].type, 420, 500, {faceUp: true, playable: true});
-  createCard(cards[2].type, 640, 500, {faceUp: true, playable: true});
+const playerCardMinX = 160;
+const playerCardMaxX = 900;
+const playerCardBottomY = 500;
+const playerCardTopY = -150;
+
+function _layoutPlayerHand(cards, y, faceUp) {
+  const count = cards.length;
+  cards.forEach((card, i) => {
+    console.log(i, card);
+    let x;
+    if (!card.domElement) {
+      console.log('creating card', card);
+      card.domElement = createCard(card.type, x, y, {faceUp: faceUp, playable: true});
+    }
+    if (count <= 3) {
+      x = [200, 420, 640][i];
+    } else if (count <= 4) {
+      x = [200, 420, 640, 860][i];
+    } else {
+      x = playerCardMinX + (playerCardMaxX - playerCardMinX)/(count-1) * i;
+    }
+    card.domElement.css('left', x);
+    card.domElement.css('top', y);
+    card.domElement.css('z-index', i);
+    card.domElement.toggleClass('face-down', !faceUp);
+  })
 }
 
-function populateWaitingPlayerHand() {
+function layoutCurrentPlayerHand() {
+  const cards = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
+  _layoutPlayerHand(cards, playerCardBottomY, true);
+}
+
+function layoutWaitingPlayerHand() {
   const cards = (currentPlayer === 1)? decks.player2.cards : decks.player1.cards;
-  createCard(cards[0].type, 200, -150, {faceUp: false, upsideDown: true});
-  createCard(cards[0].type, 420, -150, {faceUp: false, upsideDown: true});
-  createCard(cards[0].type, 640, -150, {faceUp: false, upsideDown: true});
+  _layoutPlayerHand(cards, playerCardTopY, false);
 }
 
 function populateShaftDeck() {
@@ -336,8 +355,8 @@ function endPlayerTurn() {
   decks.player2.treasuresTakenThisRound = 0;
   currentPlayer = (currentPlayer === 1)? 2 : 1;
   updatePlayerStatuses();
-  console.log('end turn');
-  // TODO: cleanup, switch players etc
+  layoutCurrentPlayerHand();
+  layoutWaitingPlayerHand();
 }
 
 function updatePlayerStatuses() {
@@ -535,7 +554,7 @@ $(document).ready(function() {
     playCard(card, indexInHand);
   });
 
-  playArea.on('click', '.card.treasure:not(.face-down):not(.unavailable)', function() {
+  playArea.on('click', '.card.treasure:not(.face-down):not(.unavailable):not(.forbidden)', function() {
     const card = $(this);
     // note that all the shaft cards are generated, so we can count index amongst them directly
     const cardIndex = card.index('.card.treasure');
@@ -564,18 +583,15 @@ $(document).ready(function() {
 
     // move card to player deck
     const newPosition = { x: 800, y: 500 }; // getPlayerNewCardPosition();
+    // we immediately bump z-index to animate from on top of the newly appearing shop card,
+    // but this will be overridden anyway during the player hand layout step below.
     card.css('z-index', 1);
-    card.css('left', newPosition.x);
-    card.css('top', newPosition.y);
     card.removeClass('mini buyable');
     buyingPlayer.cards.push({
       type: type,
       domElement: card
     });
-
-    setTimeout(function() {
-      card.css('z-index', 0);
-    }, 600)
+    layoutCurrentPlayerHand();
 
     // replenish store offer
     const newTypes = [
@@ -586,19 +602,18 @@ $(document).ready(function() {
     ];
     createCard(newTypes[indexInShop], 30, shopYPositions[indexInShop], {faceUp: true, mini: true});
 
-    // a buy ends the round
-    currentPlayer = (currentPlayer === 1)? 2 : 1;
-
-    // update status - both money and carry capacity could have changed
-    updatePlayerStatuses();
+    // a buy ends the turn
+    // this will update status - both money and carry capacity could have changed
+    // we delay a bit to wait for the card move animation
+    setTimeout(endPlayerTurn, 1200);
   });
 
   $('#end-turn-button').on('click', endPlayerTurn);
 
   populateShaftDeck();
   populateShop();
-  populateCurrentPlayerHand();
-  populateWaitingPlayerHand();
+  layoutCurrentPlayerHand();
+  layoutWaitingPlayerHand();
   updatePlayerStatuses();
 
   // debug: random card in the middle

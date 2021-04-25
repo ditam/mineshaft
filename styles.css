@@ -240,7 +240,7 @@ body {
   bottom: 90px;
   padding: 12px;
   border: 1px solid black;
-  background: linear-gradient(135deg, #444444, 35%, brown);
+  background: linear-gradient(135deg, #444444, 15%, brown 80%);
   border-radius: 4px;
   cursor: pointer;
 }
@@ -251,6 +251,7 @@ body {
 }
 
 .error-msg {
+  z-index: 200; /* cards could cover it */
   position: absolute;
   left: 480px;
   top: 250px;

@@ -4,7 +4,7 @@ const decks = {
     money: 100,
     cards: [
       { type: 'pickaxe' },
-      { type: 'pickaxe' },
+      { type: 'tnt' },
       { type: 'pickaxe' },
     ]
   },
@@ -46,6 +46,8 @@ const decks = {
   }
 };
 
+const trashPosition = { x: 1500, y: -300 };
+
 let currentPlayer = 1; // 1 or 2
 
 let errorMsg;
@@ -63,6 +65,10 @@ function preloadImage(url)
   const img = new Image();
   img.src = url;
   return img;
+}
+
+function deepCopy(o) {
+  return JSON.parse(JSON.stringify(o));
 }
 // end utils
 
@@ -156,9 +162,9 @@ function getCardType(type) {
 function createCard(type, x, y, options) {
   console.assert(type in toolCardTypes || type in shaftCardTypes, 'Unknown card type:' + type);
 
-
   const faceUp = !!options.faceUp;
   const mini = !!options.mini;
+  const playable = !!options.playable;
 
   const container = $('<div>').addClass('card').css({
     left: x,
@@ -199,6 +205,10 @@ function createCard(type, x, y, options) {
     container.addClass('mini buyable');
   }
 
+  if (playable) {
+    container.addClass('playable');
+  }
+
   container.data('type', type);
 
   container.appendTo(playArea);
@@ -226,9 +236,9 @@ function populateCurrentPlayerHand() {
   const cards = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
   // TODO: iterate cards properly
   // TODO: dynamic positions based on hand size
-  createCard(cards[0].type, 200, 500, {faceUp: true});
-  createCard(cards[1].type, 420, 500, {faceUp: true});
-  createCard(cards[2].type, 640, 500, {faceUp: true});
+  createCard(cards[0].type, 200, 500, {faceUp: true, playable: true});
+  createCard(cards[1].type, 420, 500, {faceUp: true, playable: true});
+  createCard(cards[2].type, 640, 500, {faceUp: true, playable: true});
 }
 
 function populateWaitingPlayerHand() {
@@ -345,6 +355,54 @@ function removeError() {
   }
 }
 
+function playCard(cardElement) {
+  const type = cardElement.data('type');
+  const cardType = getCardType(type);
+
+  const cardsInShaft = decks.shaft.cards;
+  const lastRevealedIndex = cardsInShaft.length-1 - decks.shaft.revealedCount + 1;
+  const lastRevealedCard = cardsInShaft[lastRevealedIndex];
+
+  console.log('last revealed is:', lastRevealedCard);
+  console.log('deck before:', deepCopy(cardsInShaft));
+  switch(type) {
+    case 'pickaxe':
+      if (decks.shaft.revealedCount > 0 && lastRevealedCard.type === 'rock') {
+        console.log('showing error');
+        showError('Can\'t dig, stone in the way.');
+        return;
+      }
+      if (decks.shaft.revealedCount === decks.shaft.cards.length) {
+        showError('Can\'t dig, shaft deck is empty.');
+        return;
+      }
+      revealCardFromShaft();
+      break;
+    case 'tnt':
+      const firstHiddenCard = cardsInShaft[lastRevealedIndex-1];
+      if (decks.shaft.revealedCount === 0) {
+        showError('Mineshaft is empty.');
+        return;
+      }
+      cardsInShaft.splice(lastRevealedIndex-1, 2);
+      decks.shaft.revealedCount--;
+      lastRevealedCard.domElement.css('left', trashPosition.x);
+      lastRevealedCard.domElement.css('top', trashPosition.y);
+      setTimeout(function() {
+        lastRevealedCard.domElement.remove();
+      }, 1200);
+      firstHiddenCard.domElement.css('left', trashPosition.x);
+      firstHiddenCard.domElement.css('top', trashPosition.y);
+      setTimeout(function() {
+        firstHiddenCard.domElement.remove();
+      }, 1200);
+      break;
+    default:
+      console.assert(false, 'playCard unknown card type:' + type)
+      break;
+  }
+}
+
 (function init() {
   // preload card images
   for (const [key, type] of Object.entries(toolCardTypes)) {
@@ -360,9 +418,8 @@ $(document).ready(function() {
   player1Status = $('#player1-status');
   player2Status = $('#player2-status');
 
-  playArea.on('click', '.card:not(.passive)', function() {
-    console.log('card click, type:', $(this).data('type'));
-    revealCardFromShaft();
+  playArea.on('click', '.card.playable', function() {
+    playCard($(this));
   });
 
   playArea.on('click', '.card.buyable', function() {

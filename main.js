@@ -1,7 +1,7 @@
 
 const decks = {
   player1: {
-    money: 100,
+    money: 100, // TODO: set to 0 for release...
     cards: [
       { type: 'pickaxe' },
       { type: 'tnt' },
@@ -112,7 +112,7 @@ const toolCardTypes = {
   'tnt': {
     assetURL: 'assets/tnt.png',
     cost: 0,
-    description: 'Destroy the last card in the mineshaft and the top card in the shaft deck.',
+    description: 'Destroy the last card in the mineshaft and the top card in the shaft deck. Single-use.',
     displayName: 'T.N.T.'
   }
 };
@@ -318,6 +318,7 @@ function returnCardsToShaft() {
 function endPlayerTurn() {
   returnCardsToShaft();
   console.log('end turn');
+  // TODO: cleanup, switch players etc
 }
 
 function updatePlayerStatuses() {
@@ -355,13 +356,15 @@ function removeError() {
   }
 }
 
-function playCard(cardElement) {
+function playCard(cardElement, handIndex) {
   const type = cardElement.data('type');
   const cardType = getCardType(type);
 
   const cardsInShaft = decks.shaft.cards;
   const lastRevealedIndex = cardsInShaft.length-1 - decks.shaft.revealedCount + 1;
   const lastRevealedCard = cardsInShaft[lastRevealedIndex];
+
+  const currentPlayerDeck = (currentPlayer === 1)? decks.player1 : decks.player2;
 
   console.log('last revealed is:', lastRevealedCard);
   console.log('deck before:', deepCopy(cardsInShaft));
@@ -384,23 +387,29 @@ function playCard(cardElement) {
         showError('Mineshaft is empty.');
         return;
       }
+      // NB: the shaft deck is indexed backwards (why am I doing this to myself...)
       cardsInShaft.splice(lastRevealedIndex-1, 2);
       decks.shaft.revealedCount--;
-      lastRevealedCard.domElement.css('left', trashPosition.x);
-      lastRevealedCard.domElement.css('top', trashPosition.y);
-      setTimeout(function() {
-        lastRevealedCard.domElement.remove();
-      }, 1200);
-      firstHiddenCard.domElement.css('left', trashPosition.x);
-      firstHiddenCard.domElement.css('top', trashPosition.y);
-      setTimeout(function() {
-        firstHiddenCard.domElement.remove();
-      }, 1200);
+      currentPlayerDeck.cards.splice(handIndex, 1);
+      const elementsToRemove = [lastRevealedCard.domElement, firstHiddenCard.domElement, cardElement];
+      elementsToRemove.forEach(el => {
+        el.css('left', trashPosition.x);
+        el.css('top', trashPosition.y);
+        setTimeout(function() {
+          el.remove();
+        }, 1200);
+      });
+      // hack: we remove this flag immediately so there's no race condition while
+      // the click handler is trying to determine which card index was played from the hand
+      cardElement.removeClass('playable');
       break;
     default:
       console.assert(false, 'playCard unknown card type:' + type)
       break;
   }
+
+  // if we reached this point, the card was played - we mark it as played
+  cardElement.addClass('face-down');
 }
 
 (function init() {
@@ -418,8 +427,10 @@ $(document).ready(function() {
   player1Status = $('#player1-status');
   player2Status = $('#player2-status');
 
-  playArea.on('click', '.card.playable', function() {
-    playCard($(this));
+  playArea.on('click', '.card:not(.face-down).playable', function() {
+    const card = $(this);
+    const indexInHand = card.index('.card.playable');
+    playCard(card, indexInHand);
   });
 
   playArea.on('click', '.card.buyable', function() {

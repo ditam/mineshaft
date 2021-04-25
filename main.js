@@ -19,8 +19,22 @@ const decks = {
       x: 1030,
       y: 161
     },
-    cards: [],
-    revealedCount: 4 // FIXME: should start as 0 (or 1?)
+    cards: [
+      // bottom-first so it can be dumped into DOM naively
+      { type: 'platinum' },
+      { type: 'gold' },
+      { type: 'rock' },
+      { type: 'soil' },
+      { type: 'silver' },
+      { type: 'gold' },
+      { type: 'silver' },
+      { type: 'soil' },
+      { type: 'rock' },
+      { type: 'silver' },
+      { type: 'soil' },
+      { type: 'soil' }
+    ],
+    revealedCount: 0
   },
   shop: {
     cards: [
@@ -77,6 +91,18 @@ const toolCardTypes = {
 };
 
 const shaftCardTypes = {
+  'gold': {
+    assetURL: 'assets/gold-icon.png',
+    bgColor: '#d4af37',
+    cost: 2,
+    displayName: 'Gold'
+  },
+  'platinum': {
+    assetURL: 'assets/platinum-icon.png',
+    bgColor: '#77aa77',
+    cost: 3,
+    displayName: 'platinum'
+  },
   'rock': {
     assetURL: 'assets/rock-icon.png',
     bgColor: '#424242',
@@ -121,27 +147,31 @@ function createCard(type, x, y, options) {
   const cardClass = (type in toolCardTypes)? 'tool' : 'treasure';
   container.addClass(cardClass);
 
+  // debug: add card type to class list
+  container.addClass(type);
+
   container.toggleClass('face-down', !faceUp);
   // for now, every face-down card is passive, but we might change this...
   container.toggleClass('passive', !faceUp);
 
-  if (faceUp) {
-    cardType = getCardType(type);
-    $('<div>').addClass('cost').text(cardType.cost).appendTo(container);
-    $('<div>').addClass('header').text(cardType.displayName).appendTo(container);
+  const front = $('<div>').addClass('card-face card-front').appendTo(container);
+  const back = $('<div>').addClass('card-face card-back').appendTo(container);
 
-    const imgContainer = $('<div>').addClass('img-container');
-    $('<img>').attr('src', cardType.assetURL).appendTo(imgContainer);
-    imgContainer.appendTo(container);
+  const cardType = getCardType(type);
+  $('<div>').addClass('cost').text(cardType.cost).appendTo(front);
+  $('<div>').addClass('header').text(cardType.displayName).appendTo(front);
 
-    if (cardClass === 'tool') {
-      console.assert(cardType.description);
-      $('<div>').addClass('description').text(cardType.description).appendTo(container);
-    } else {
-      console.assert(cardType.bgColor);
-      // NB: angle, startcolor, %position of 50% mix, endcolor %position of complete endcolor fill
-      container.css('background', `linear-gradient(135deg, #888888, 35%, ${cardType.bgColor} 80%)`);
-    }
+  const imgContainer = $('<div>').addClass('img-container');
+  $('<img>').attr('src', cardType.assetURL).appendTo(imgContainer);
+  imgContainer.appendTo(front);
+
+  if (cardClass === 'tool') {
+    console.assert(cardType.description);
+    $('<div>').addClass('description').text(cardType.description).appendTo(front);
+  } else {
+    console.assert(cardType.bgColor);
+    // NB: angle, startcolor, %position of 50% mix, endcolor %position of complete endcolor fill
+    front.css('background', `linear-gradient(135deg, #888888, 35%, ${cardType.bgColor} 80%)`);
   }
 
   if (mini) {
@@ -181,6 +211,23 @@ function populateWaitingPlayerHand() {
   createCard(cards[0].type, 640, -150, {faceUp: false});
 }
 
+function populateShaftDeck() {
+  const x = decks.shaft.position.x;
+  const y = decks.shaft.position.y;
+  decks.shaft.cards.forEach(card => {
+    createCard(card.type, x, y, {faceUp: false});
+  });
+}
+
+function revealCardFromShaft() {
+  const cards = decks.shaft.cards;
+  const nextCard = cards[cards.length-1 - decks.shaft.revealedCount];
+  console.log('next card is:', nextCard);
+
+  // debug, remove
+  console.log('last:', playArea.last('.card'));
+  playArea.find('.card').last().toggleClass('face-down');
+}
 
 (function init() {
   // preload card images
@@ -199,18 +246,20 @@ $(document).ready(function() {
 
   playArea.on('click', '.card:not(.passive)', function() {
     console.log('card click, type:', $(this).data('type'));
+    revealCardFromShaft();
   });
 
+  populateShaftDeck();
   populateShop();
   populateCurrentPlayerHand();
   populateWaitingPlayerHand();
 
-  // place shaft deck
-  createCard('soil', decks.shaft.position.x, decks.shaft.position.y, {faceUp: false});
+  // debug: random card in the middle
+  createCard('pickaxe', 400, 170, {faceUp: true});
 
   // debug: revealed shaft cards
-  createCard('soil', decks.shaft.position.x-860, decks.shaft.position.y, {faceUp: true});
-  createCard('soil', decks.shaft.position.x-642, decks.shaft.position.y, {faceUp: true});
-  createCard('silver', decks.shaft.position.x-424, decks.shaft.position.y, {faceUp: true});
-  createCard('rock', decks.shaft.position.x-206, decks.shaft.position.y, {faceUp: true});
+  //createCard('soil', decks.shaft.position.x-860, decks.shaft.position.y, {faceUp: true});
+  //createCard('soil', decks.shaft.position.x-642, decks.shaft.position.y, {faceUp: true});
+  //createCard('silver', decks.shaft.position.x-424, decks.shaft.position.y, {faceUp: true});
+  //createCard('rock', decks.shaft.position.x-206, decks.shaft.position.y, {faceUp: true});
 });

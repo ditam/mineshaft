@@ -64,28 +64,42 @@ body {
   position: absolute;
   width: 200px; /* standard playing cards are 2.5 : 3.5 aspect ratio */
   height: 280px;
-  overflow: hidden;
-  border: 3px solid #3c0a06;
   border-radius: 8px;
   cursor: pointer;
-  background-color: #662c1c;;
-  box-shadow: 4px 2px 5px rgba(0, 0, 0, 0.4);
+
+  perspective: 1200px;
 }
 
 .card.passive {
   cursor: default;
 }
 
-.card:not(.passive):hover {
+.card .card-face {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 8px;
+  overflow: hidden;
+
+  transition: transform 1.1s;
+  transform-style: preserve-3d;
+
+  box-shadow: 4px 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.card:not(.passive) .card-face:hover {
   box-shadow: 6px 3px 10px rgba(0, 0, 0, 0.8);
 }
 
-.card.treasure {
-  background-color: #f3f3f3;
+.card .card-front {
+  border: 3px solid #3c0a06;
 }
 
-.card.face-down {
+.card .card-back {
   border: 3px solid gray;
+
   background: repeating-linear-gradient(
     135deg,
     #c0c0c0 0,
@@ -93,6 +107,17 @@ body {
     #d0d0d0 16px,
     #d0d0d0 32px
   );
+}
+
+.card.tool .card-front {
+  background: linear-gradient(135deg, #444444, 35%, brown);
+}
+
+.card.face-down .card-front {
+  transform: rotateY(180deg);
+}
+.card:not(.face-down) .card-back {
+  transform: rotateY(-180deg);
 }
 
 .card.mini {

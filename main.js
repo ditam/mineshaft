@@ -71,42 +71,42 @@ const toolCardTypes = {
     assetURL: 'assets/lantern.png',
     cost: 1,
     description: 'Lanternates.',
-    displayName: 'Lantern'
+    displayName: 'Look at the top 3 cards of the shaft deck.'
   },
   'minecart': {
     assetURL: 'assets/minecart.png',
     cost: 3,
-    description: 'carty carty',
+    description: 'Increases carry capacity by 1.',
     displayName: 'Mine cart'
   },
   'pickaxe': {
     assetURL: 'assets/pickaxe.png',
     cost: 0,
-    description: 'Can be used to whatever or I guess also once I figure it out something something.',
+    description: 'Reveal a new card from the shaft deck. Blocked by stone.',
     displayName: 'Pickaxe'
   },
   'sabotage': {
     assetURL: 'assets/sabotage.png',
     cost: 2,
-    description: 'Oh my God, it\'s a mirage',
+    description: 'Discard together with a TNT to remove any card from opponent\'s hand.',
     displayName: 'Sabotage'
   },
   'sieve': {
     assetURL: 'assets/sieve.png',
     cost: 1,
-    description: 'Sieveeeeeeeee',
+    description: 'Swap any two cards in the mineshaft.',
     displayName: 'Sieve'
   },
   'subshaft': {
     assetURL: 'assets/subshaft.png',
     cost: 2,
-    description: 'sneaky sneaky lemon squeezy',
+    description: 'Bypass a stone card.',
     displayName: 'Sub-shaft'
   },
   'tnt': {
     assetURL: 'assets/tnt.png',
     cost: 0,
-    description: 'Boom-boom.',
+    description: 'Destroy the last card in the mineshaft and the top card in the shaft deck.',
     displayName: 'T.N.T.'
   }
 };

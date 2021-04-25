@@ -64,6 +64,23 @@ body {
   margin-left: -3px;
 }
 
+.player-status .details .current-player-indicator {
+  position: absolute;
+  left: -36px;
+  top: 0;
+}
+.player-status.current .details .current-player-indicator {
+  border-top: 24px solid transparent;
+  border-bottom: 24px solid transparent;
+}
+
+.player-status.current.blue .details .current-player-indicator {
+  border-left: 24px solid blue;
+}
+.player-status.current.red .details .current-player-indicator {
+  border-left: 24px solid red;
+}
+
 .player-status .details > div {
   display: inline-block;
 }
@@ -122,6 +139,12 @@ body {
 
 .card:not(.passive) .card-face:hover {
   box-shadow: 6px 3px 10px rgba(0, 0, 0, 0.8);
+}
+
+.card.treasure:not(.unavailable):not(.forbidden):not(.face-down) .card-face:hover {
+  border-color: rgb(255 197 48);
+  cursor: pointer;
+  box-shadow: 6px 3px 10px rgba(255, 225, 54, 0.8);
 }
 
 .card .card-front {

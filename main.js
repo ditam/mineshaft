@@ -2,6 +2,7 @@
 const decks = {
   player1: {
     money: 100, // TODO: set to 0 for release...
+    treasuresTakenThisRound: 0,
     cards: [
       { type: 'tnt' },
       { type: 'pickaxe' },
@@ -10,6 +11,7 @@ const decks = {
   },
   player2: {
     money: 0,
+    treasuresTakenThisRound: 0,
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
@@ -46,7 +48,11 @@ const decks = {
   }
 };
 
+// These off-screen positions are the targets for the flying card animations
 const trashPosition = { x: 1500, y: -300 };
+const treasuresPosition = { x: 1500, y: 800 };
+
+const gameMode = 'hot-seat';
 
 let currentPlayer = 1; // 1 or 2
 
@@ -197,6 +203,9 @@ function createCard(type, x, y, options) {
     console.assert(cardType.description);
     $('<div>').addClass('description').text(cardType.description).appendTo(front);
   } else {
+    if (cardType.forbidden) {
+      container.addClass('forbidden');
+    }
     console.assert(cardType.bgColor);
     // NB: angle, startcolor, %position of 50% mix, endcolor %position of complete endcolor fill
     front.css('background', `linear-gradient(135deg, #888888, 35%, ${cardType.bgColor} 80%)`);
@@ -322,11 +331,17 @@ function returnCardsToShaft() {
 
 function endPlayerTurn() {
   returnCardsToShaft();
+  $('.card.treasure').removeClass('unavailable');
+  decks.player1.treasuresTakenThisRound = 0;
+  decks.player2.treasuresTakenThisRound = 0;
+  currentPlayer = (currentPlayer === 1)? 2 : 1;
+  updatePlayerStatuses();
   console.log('end turn');
   // TODO: cleanup, switch players etc
 }
 
 function updatePlayerStatuses() {
+  player1Status.toggleClass('current', currentPlayer === 1);
   const details1 = player1Status.find('.details');
   let carry1 = 1;
   decks.player1.cards.forEach(card => {
@@ -334,6 +349,7 @@ function updatePlayerStatuses() {
       carry1++;
     }
   });
+  carry1 -= decks.player1.treasuresTakenThisRound;
   details1.find('.carry-value').text(carry1);
   details1.find('.money-value').text(decks.player1.money);
 
@@ -344,6 +360,8 @@ function updatePlayerStatuses() {
       carry2++;
     }
   });
+  carry2 -= decks.player2.treasuresTakenThisRound;
+  player2Status.toggleClass('current', currentPlayer === 2);
   details2.find('.carry-value').text(carry2);
   details2.find('.money-value').text(decks.player2.money);
 }
@@ -358,6 +376,35 @@ function removeError() {
   if (errorMsg) {
     errorMsg.remove();
     errorMsg = null;
+  }
+}
+
+function takeTreasure(cardElement, indexInShaftDeck) {
+  const card = decks.shaft.cards[indexInShaftDeck];
+  const cardType = getCardType(card.type);
+
+  // remove card visually and from the deck registry
+  animateElementRemoval(cardElement, treasuresPosition);
+  decks.shaft.cards.splice(indexInShaftDeck, 1);
+  decks.shaft.revealedCount--;
+
+  // add cost to player's bank
+  const currentPlayerDeck = (currentPlayer === 1)? decks.player1 : decks.player2;
+  currentPlayerDeck.money += cardType.cost;
+
+  // mark that a card was taken
+  currentPlayerDeck.treasuresTakenThisRound++;
+  updatePlayerStatuses();
+
+  // update treasure card availability
+  let carryCapacity = 1;
+  currentPlayerDeck.cards.forEach(card => {
+    if (card.type === 'minecart') {
+      carryCapacity++;
+    }
+  });
+  if (carryCapacity <= currentPlayerDeck.treasuresTakenThisRound) {
+    $('.card.treasure').addClass('unavailable');
   }
 }
 
@@ -382,9 +429,13 @@ function showSabotageSelector(callback) {
   });
 }
 
-function animateElementRemoval(el) {
-  el.css('left', trashPosition.x);
-  el.css('top', trashPosition.y);
+function animateElementRemoval(el, target) {
+  if (!target) {
+    target = trashPosition;
+  }
+  console.assert(target.x, 'animateElementRemoval received invalid target');
+  el.css('left', target.x);
+  el.css('top', target.y);
   setTimeout(function() {
     el.remove();
   }, 1200);
@@ -431,7 +482,9 @@ function playCard(cardElement, handIndex) {
       decks.shaft.revealedCount--;
       currentPlayerDeck.cards.splice(handIndex, 1);
       const elementsToRemove = [lastRevealedCard.domElement, firstHiddenCard.domElement, cardElement];
-      elementsToRemove.forEach(animateElementRemoval);
+      elementsToRemove.forEach(el => {
+        animateElementRemoval(el); // NB: it now takes multiple params, so don't blindly foreach/map to it...
+      });
       // hack: we remove this flag immediately so there's no race condition while
       // the click handler is trying to determine which card index was played from the hand
       cardElement.removeClass('playable');
@@ -458,7 +511,7 @@ function playCard(cardElement, handIndex) {
   }
 
   // if we reached this point, the card was played - we mark it as played
-  cardElement.addClass('face-down');
+  //FIXME cardElement.addClass('face-down');
 }
 
 (function init() {
@@ -480,6 +533,14 @@ $(document).ready(function() {
     const card = $(this);
     const indexInHand = card.index('.card.playable');
     playCard(card, indexInHand);
+  });
+
+  playArea.on('click', '.card.treasure:not(.face-down):not(.unavailable)', function() {
+    const card = $(this);
+    // note that all the shaft cards are generated, so we can count index amongst them directly
+    const cardIndex = card.index('.card.treasure');
+    console.log('taking treasure:', card, cardIndex);
+    takeTreasure(card, cardIndex);
   });
 
   playArea.on('click', '.card.buyable', function() {
@@ -516,9 +577,6 @@ $(document).ready(function() {
       card.css('z-index', 0);
     }, 600)
 
-    // update status - both money and carry capacity could have changed
-    updatePlayerStatuses();
-
     // replenish store offer
     const newTypes = [
       'pickaxe',
@@ -527,6 +585,12 @@ $(document).ready(function() {
       getRandomItem(['minecart', 'lantern', 'sabotage', 'subshaft', 'sieve'])
     ];
     createCard(newTypes[indexInShop], 30, shopYPositions[indexInShop], {faceUp: true, mini: true});
+
+    // a buy ends the round
+    currentPlayer = (currentPlayer === 1)? 2 : 1;
+
+    // update status - both money and carry capacity could have changed
+    updatePlayerStatuses();
   });
 
   $('#end-turn-button').on('click', endPlayerTurn);

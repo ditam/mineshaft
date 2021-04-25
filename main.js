@@ -1,26 +1,37 @@
 
 const decks = {
-  player1: {},
-  player2: {},
+  player1: {
+    cards: [
+      { type: 'pickaxe' },
+      { type: 'tnt' }, // FIXME this is just visual debug
+      { type: 'pickaxe' },
+    ]
+  },
+  player2: {
+    cards: [
+      { type: 'pickaxe' },
+      { type: 'pickaxe' },
+      { type: 'pickaxe' },
+    ]
+  },
   shaft: {
     position: {
-      x: 750,
-      y: 156
+      x: 1030,
+      y: 161
     },
     cards: [],
+    revealedCount: 4 // FIXME: should start as 0 (or 1?)
   },
   shop: {
     cards: [
-      {
-        type: 'lantern'
-      },{
-        type: 'sabotage'
-      }
+      { type: 'lantern' },
+      { type: 'sabotage' }
     ]
   }
 };
 
 let playArea;
+let currentPlayer = 1; // 1 or 2
 
 // utils -- TODO: move to separate file
 function getRandomItem(array) {
@@ -63,18 +74,25 @@ const toolCardTypes = {
 };
 
 const shaftCardTypes = {
-  'soil': {
-    assetURL: 'assets/soil.png',
+  'rock': {
+    assetURL: 'assets/rock-icon.png',
+    bgColor: '#424242',
+    forbidden: true,
     cost: 0,
-    description: '',
+    displayName: 'Rock'
+  },
+  'silver': {
+    assetURL: 'assets/silver-icon.png',
+    bgColor: '#bebdbd',
+    cost: 1,
+    displayName: 'Silver'
+  },
+  'soil': {
+    assetURL: 'assets/soil-icon.png',
+    bgColor: '#723b16',
+    cost: 0,
     displayName: 'Soil'
   },
-  'rock': {
-    assetURL: 'assets/rock.png',
-    cost: 0,
-    description: '',
-    displayName: 'Rock'
-  }
 };
 
 function getCardType(type) {
@@ -85,17 +103,9 @@ function getCardType(type) {
   }
 }
 
-function populateShop() {
-  createCard('pickaxe', 30, 5, {faceUp: true, mini: true});
-  createCard('tnt', 30, 150, {faceUp: true, mini: true});
-  let card = decks.shop.cards.shift();
-  createCard(card.type, 30, 315, {faceUp: true, mini: true});
-  card = decks.shop.cards.shift();
-  createCard(card.type, 30, 460, {faceUp: true, mini: true});
-}
-
 function createCard(type, x, y, options) {
   console.assert(type in toolCardTypes || type in shaftCardTypes);
+
 
   const faceUp = !!options.faceUp;
   const mini = !!options.mini;
@@ -105,6 +115,9 @@ function createCard(type, x, y, options) {
     top: y
   });
 
+  const cardClass = (type in toolCardTypes)? 'tool' : 'treasure';
+  container.addClass(cardClass);
+
   container.toggleClass('face-down', !faceUp);
   // for now, every face-down card is passive, but we might change this...
   container.toggleClass('passive', !faceUp);
@@ -113,8 +126,19 @@ function createCard(type, x, y, options) {
     cardType = getCardType(type);
     $('<div>').addClass('cost').text(cardType.cost).appendTo(container);
     $('<div>').addClass('header').text(cardType.displayName).appendTo(container);
-    $('<img>').attr('src', cardType.assetURL).appendTo(container);
-    $('<div>').addClass('description').text(cardType.description).appendTo(container);
+
+    const imgContainer = $('<div>').addClass('img-container');
+    $('<img>').attr('src', cardType.assetURL).appendTo(imgContainer);
+    imgContainer.appendTo(container);
+
+    if (cardClass === 'tool') {
+      console.assert(cardType.description);
+      $('<div>').addClass('description').text(cardType.description).appendTo(container);
+    } else {
+      console.assert(cardType.bgColor);
+      // NB: angle, startcolor, %position of 50% mix, endcolor %position of complete endcolor fill
+      container.css('background', `linear-gradient(135deg, #888888, 35%, ${cardType.bgColor} 80%)`);
+    }
   }
 
   if (mini) {
@@ -128,6 +152,33 @@ function createCard(type, x, y, options) {
   // TODO: put card in a deck
 }
 
+function populateShop() {
+  createCard('pickaxe', 30, 5, {faceUp: true, mini: true});
+  createCard('tnt', 30, 150, {faceUp: true, mini: true});
+  let card = decks.shop.cards.shift();
+  createCard(card.type, 30, 315, {faceUp: true, mini: true});
+  card = decks.shop.cards.shift();
+  createCard(card.type, 30, 460, {faceUp: true, mini: true});
+}
+
+function populateCurrentPlayerHand() {
+  // TODO: before this becomes reusable we need to clean up old cards or diff
+  const cards = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
+  // TODO: iterate cards properly
+  // TODO: dynamic positions based on hand size
+  createCard(cards[0].type, 200, 500, {faceUp: true});
+  createCard(cards[1].type, 420, 500, {faceUp: true});
+  createCard(cards[2].type, 640, 500, {faceUp: true});
+}
+
+function populateWaitingPlayerHand() {
+  const cards = (currentPlayer === 1)? decks.player2.cards : decks.player1.cards;
+  createCard(cards[0].type, 200, -150, {faceUp: false});
+  createCard(cards[0].type, 420, -150, {faceUp: false});
+  createCard(cards[0].type, 640, -150, {faceUp: false});
+}
+
+
 (function init() {
   // preload card images
   for (const [key, type] of Object.entries(toolCardTypes)) {
@@ -139,8 +190,6 @@ function createCard(type, x, y, options) {
 })();
 
 $(document).ready(function() {
-  console.log('Hello Mineshaft!');
-
   playArea = $('#play-area');
 
   playArea.on('click', '.card:not(.passive)', function() {
@@ -148,9 +197,15 @@ $(document).ready(function() {
   });
 
   populateShop();
+  populateCurrentPlayerHand();
+  populateWaitingPlayerHand();
 
-  createCard('pickaxe', 200, 200, {faceUp: true});
-  createCard('tnt', 420, 200, {faceUp: true});
-  createCard('pickaxe', 640, 500, {faceUp: true});
+  // place shaft deck
   createCard('soil', decks.shaft.position.x, decks.shaft.position.y, {faceUp: false});
+
+  // debug: revealed shaft cards
+  createCard('soil', decks.shaft.position.x-860, decks.shaft.position.y, {faceUp: true});
+  createCard('soil', decks.shaft.position.x-642, decks.shaft.position.y, {faceUp: true});
+  createCard('silver', decks.shaft.position.x-424, decks.shaft.position.y, {faceUp: true});
+  createCard('rock', decks.shaft.position.x-206, decks.shaft.position.y, {faceUp: true});
 });

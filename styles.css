@@ -55,6 +55,10 @@ body {
   cursor: default;
 }
 
+.card.treasure {
+  background-color: #f3f3f3;
+}
+
 .card.face-down {
   border: 3px solid gray;
   background: repeating-linear-gradient(
@@ -84,6 +88,7 @@ body {
   text-align: center;
   font-family: 'Alfa Slab One', serif;
 }
+
 .card .header {
   background-color: #c37811;
   margin-top: 8px;
@@ -102,6 +107,13 @@ body {
   margin-left: 30px;
 }
 
+.card.treasure img {
+  width: 128px;
+  height: 128px;
+  margin-left: 38px;
+  margin-top: 47px;
+}
+
 .card .description {
   background-color: #c37811;
   height: 80px; /* overflow is hidden anyway */
@@ -114,8 +126,8 @@ body {
   line-height: 320px;
   width: 100%;
   border-radius: 10px;
-  margin-top: 140px;
-  margin-left: 120px; /* making room for purchase area */
+  margin-top: 145px;
+  margin-left: 160px; /* making room for purchase area */
   padding-left: 30px;
   background-color: rgba(0,0,0,0.1);
 }
@@ -123,7 +135,7 @@ body {
 #shaft-display #title {
   text-transform: uppercase;
   font-family: 'Alfa Slab One', serif;
-  font-size: 100px;
+  font-size: 115px;
   opacity: 0.05;
   user-select: none;
 }

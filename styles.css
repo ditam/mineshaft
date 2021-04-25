@@ -95,7 +95,7 @@ body {
   border-radius: 8px;
   cursor: pointer;
 
-  transition: left 1.2s;
+  transition: left 1.2s, top 1.2s;
 
   /* This is the perspective for the flip animation */
   perspective: 1200px;
@@ -156,7 +156,7 @@ body {
   transform: scale(0.5);
 }
 
-.card.mini:hover:after {
+.card.buyable:hover:after {
   content: 'Buy';
   display: block;
   text-align: center;
@@ -248,4 +248,16 @@ body {
 #end-turn-button:hover {
   background: none;
   background-color: brown;
+}
+
+.error-msg {
+  position: absolute;
+  left: 480px;
+  top: 250px;
+  width: 300px;
+  height: 60px;
+  text-align: center;
+  padding-top: 45px;
+  background-color: darkred;
+  color: black;
 }

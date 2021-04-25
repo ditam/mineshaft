@@ -1,6 +1,7 @@
 
 const decks = {
   player1: {
+    money: 0,
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
@@ -8,6 +9,7 @@ const decks = {
     ]
   },
   player2: {
+    money: 0,
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
@@ -44,10 +46,9 @@ const decks = {
   }
 };
 
-let player1Money = 0;
-let player2Money = 0;
 let currentPlayer = 1; // 1 or 2
 
+let errorMsg;
 let playArea;
 let player1Status;
 let player2Status;
@@ -177,7 +178,7 @@ function createCard(type, x, y, options) {
   }
 
   if (mini) {
-    container.addClass('mini');
+    container.addClass('mini buyable');
   }
 
   container.data('type', type);
@@ -289,7 +290,7 @@ function updatePlayerStatuses() {
     }
   });
   details1.find('.carry-value').text(carry1);
-  details1.find('.money-value').text(player1Money);
+  details1.find('.money-value').text(decks.player1.money);
 
   const details2 = player2Status.find('.details');
   const carry2 = 1;
@@ -299,7 +300,20 @@ function updatePlayerStatuses() {
     }
   });
   details2.find('.carry-value').text(carry2);
-  details2.find('.money-value').text(player2Money);
+  details2.find('.money-value').text(decks.player2.money);
+}
+
+function showError(msg) {
+  removeError();
+  errorMsg = $('<div>').addClass('error-msg').text(msg).appendTo(playArea);
+  setTimeout(removeError, 1500);
+}
+
+function removeError() {
+  if (errorMsg) {
+    errorMsg.remove();
+    errorMsg = null;
+  }
 }
 
 (function init() {
@@ -320,6 +334,31 @@ $(document).ready(function() {
   playArea.on('click', '.card:not(.passive)', function() {
     console.log('card click, type:', $(this).data('type'));
     revealCardFromShaft();
+  });
+
+  playArea.on('click', '.card.buyable', function() {
+    const card = $(this);
+    const type = card.data('type');
+    const indexInShop = card.index('.card.buyable');
+
+    const cardTypeData = getCardType(type);
+
+    // TODO: make sure these are non-clickable during AI turn
+    const buyingPlayer = (currentPlayer === 1)? decks.player1 : decks.player2;
+
+    if (buyingPlayer.money < cardTypeData.cost) {
+      showError('Can\'t buy - not enough money');
+      return;
+    }
+
+    const newPosition = { x: 800, y: 500 }; // getPlayerNewCardPosition();
+    card.css('left', newPosition.x);
+    card.css('top', newPosition.y);
+    card.removeClass('mini buyable');
+    buyingPlayer.cards.push({
+      type: type,
+      domElement: card
+    });
   });
 
   $('#end-turn-button').on('click', endPlayerTurn);

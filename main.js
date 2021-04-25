@@ -3,9 +3,9 @@ const decks = {
   player1: {
     money: 100, // TODO: set to 0 for release...
     cards: [
+      { type: 'minecart' },
       { type: 'pickaxe' },
-      { type: 'tnt' },
-      { type: 'pickaxe' },
+      { type: 'sabotage' },
     ]
   },
   player2: {
@@ -323,7 +323,7 @@ function endPlayerTurn() {
 
 function updatePlayerStatuses() {
   const details1 = player1Status.find('.details');
-  const carry1 = 1;
+  let carry1 = 1;
   decks.player1.cards.forEach(card => {
     if (card.type === 'minecart') {
       carry1++;
@@ -333,7 +333,7 @@ function updatePlayerStatuses() {
   details1.find('.money-value').text(decks.player1.money);
 
   const details2 = player2Status.find('.details');
-  const carry2 = 1;
+  let carry2 = 1;
   decks.player2.cards.forEach(card => {
     if (card.type === 'minecart') {
       carry2++;
@@ -403,6 +403,9 @@ function playCard(cardElement, handIndex) {
       // the click handler is trying to determine which card index was played from the hand
       cardElement.removeClass('playable');
       break;
+    case 'minecart':
+      showError('This is not an action card. (The bonus is passive.)');
+      return;
     default:
       console.assert(false, 'playCard unknown card type:' + type)
       break;
@@ -451,7 +454,6 @@ $(document).ready(function() {
 
     // pay for card
     buyingPlayer.money -= cardTypeData.cost;
-    updatePlayerStatuses();
 
     // move card to player deck
     const newPosition = { x: 800, y: 500 }; // getPlayerNewCardPosition();
@@ -467,6 +469,9 @@ $(document).ready(function() {
     setTimeout(function() {
       card.css('z-index', 0);
     }, 600)
+
+    // update status - both money and carry capacity could have changed
+    updatePlayerStatuses();
 
     // replenish store offer
     const newTypes = [

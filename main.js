@@ -246,7 +246,6 @@ function compactCardsIfNecessary() {
     console.log('adjusting:', card);
     card.domElement.css('left', mineshaftLeftX + i*newSpacing);
     card.domElement.css('z-index', i);
-    // TODO: remove z-index when reassembling shaft deck
   }
 }
 
@@ -266,7 +265,13 @@ function returnCardsToShaft() {
   decks.shaft.cards.forEach(card => {
     card.domElement.addClass('face-down');
     card.domElement.css('left', decks.shaft.position.x);
-    card.domElement.css('z-index', 0);
+    // Hack for a visual glitch: as the cards rotate to their backside, we now want the
+    // first ones to be on top again - to avoid a visible jump, we try hitting the point
+    // in the CSS property animation when the cards are turned sideways during the flip.
+    // This can probably be done properly via animation keyframes.
+    setTimeout(function() {
+      card.domElement.css('z-index', 0);
+    }, 300);
   });
 }
 

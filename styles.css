@@ -156,6 +156,20 @@ body {
   transform: scale(0.5);
 }
 
+.card.mini:hover:after {
+  content: 'Buy';
+  display: block;
+  text-align: center;
+  padding-top: 60%;
+  font-size: 28px;
+  /* These sizes are behaving weird. Update them by eye, i guess. */
+  width: 206px;
+  height: 166px;
+  background-color: #80808071;
+  /* This also seems necessary, what's up with these :after elements... */
+  opacity: 0.99;
+}
+
 .card .cost {
   position: absolute;
   top: 5px;

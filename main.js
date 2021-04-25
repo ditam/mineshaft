@@ -101,7 +101,7 @@ const shaftCardTypes = {
     assetURL: 'assets/platinum-icon.png',
     bgColor: '#77aa77',
     cost: 3,
-    displayName: 'platinum'
+    displayName: 'Platinum'
   },
   'rock': {
     assetURL: 'assets/rock-icon.png',
@@ -182,7 +182,7 @@ function createCard(type, x, y, options) {
 
   container.appendTo(playArea);
 
-  // TODO: put card in a deck
+  return container;
 }
 
 function populateShop() {
@@ -215,18 +215,48 @@ function populateShaftDeck() {
   const x = decks.shaft.position.x;
   const y = decks.shaft.position.y;
   decks.shaft.cards.forEach(card => {
-    createCard(card.type, x, y, {faceUp: false});
+    card.domElement = createCard(card.type, x, y, {faceUp: false});
   });
+}
+
+const mineshaftLeftX = 175; // position on screen
+function getNextCardPosition() {
+  let revealedCount = decks.shaft.revealedCount;
+  if (revealedCount > 3) {
+    // position as if it was 4th - other cards are expected to make room
+    revealedCount = 3;
+  }
+  const base = mineshaftLeftX;
+  return base + revealedCount * 210;
+}
+
+function compactCardsIfNecessary() {
+  // called before reveal, so 1 spot has to be free
+  const revealedCount = decks.shaft.revealedCount;
+  if (revealedCount <= 3) return;
+
+  const cardCount = revealedCount + 1;
+  const availableSpace = 630;
+  const newSpacing = availableSpace / cardCount;
+  const cards = decks.shaft.cards;
+  for (let i=0; i<cardCount; i++) {
+    const card = cards[cards.length-1 - i];
+    console.log('adjusting:', card);
+    card.domElement.css('left', mineshaftLeftX + i*newSpacing);
+    card.domElement.css('z-index', i);
+    // TODO: remove z-index when reassembling shaft deck
+  }
 }
 
 function revealCardFromShaft() {
   const cards = decks.shaft.cards;
   const nextCard = cards[cards.length-1 - decks.shaft.revealedCount];
-  console.log('next card is:', nextCard);
+  compactCardsIfNecessary();
 
-  // debug, remove
-  console.log('last:', playArea.last('.card'));
-  playArea.find('.card').last().toggleClass('face-down');
+  nextCard.domElement.css('left', getNextCardPosition());
+  nextCard.domElement.removeClass('face-down');
+
+  decks.shaft.revealedCount++;
 }
 
 (function init() {
@@ -255,7 +285,7 @@ $(document).ready(function() {
   populateWaitingPlayerHand();
 
   // debug: random card in the middle
-  createCard('pickaxe', 400, 170, {faceUp: true});
+  //createCard('pickaxe', 400, 170, {faceUp: true});
 
   // debug: revealed shaft cards
   //createCard('soil', decks.shaft.position.x-860, decks.shaft.position.y, {faceUp: true});

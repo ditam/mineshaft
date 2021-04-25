@@ -67,6 +67,9 @@ body {
   border-radius: 8px;
   cursor: pointer;
 
+  transition: left 1.2s;
+
+  /* This is the perspective for the flip animation */
   perspective: 1200px;
 }
 

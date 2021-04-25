@@ -1,7 +1,7 @@
 
 const decks = {
   player1: {
-    money: 0,
+    money: 100,
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
@@ -73,6 +73,12 @@ const toolCardTypes = {
     description: 'Lanternates.',
     displayName: 'Lantern'
   },
+  'minecart': {
+    assetURL: 'assets/minecart.png',
+    cost: 3,
+    description: 'carty carty',
+    displayName: 'Mine cart'
+  },
   'pickaxe': {
     assetURL: 'assets/pickaxe.png',
     cost: 0,
@@ -84,6 +90,18 @@ const toolCardTypes = {
     cost: 2,
     description: 'Oh my God, it\'s a mirage',
     displayName: 'Sabotage'
+  },
+  'sieve': {
+    assetURL: 'assets/sieve.png',
+    cost: 1,
+    description: 'Sieveeeeeeeee',
+    displayName: 'Sieve'
+  },
+  'subshaft': {
+    assetURL: 'assets/subshaft.png',
+    cost: 2,
+    description: 'sneaky sneaky lemon squeezy',
+    displayName: 'Sub-shaft'
   },
   'tnt': {
     assetURL: 'assets/tnt.png',
@@ -136,7 +154,7 @@ function getCardType(type) {
 }
 
 function createCard(type, x, y, options) {
-  console.assert(type in toolCardTypes || type in shaftCardTypes);
+  console.assert(type in toolCardTypes || type in shaftCardTypes, 'Unknown card type:' + type);
 
 
   const faceUp = !!options.faceUp;
@@ -188,13 +206,19 @@ function createCard(type, x, y, options) {
   return container;
 }
 
+const shopYPositions = [
+  5,
+  150,
+  315,
+  460
+];
 function populateShop() {
-  createCard('pickaxe', 30, 5, {faceUp: true, mini: true});
-  createCard('tnt', 30, 150, {faceUp: true, mini: true});
+  createCard('pickaxe', 30, shopYPositions[0], {faceUp: true, mini: true});
+  createCard('tnt', 30, shopYPositions[1], {faceUp: true, mini: true});
   let card = decks.shop.cards.shift();
-  createCard(card.type, 30, 315, {faceUp: true, mini: true});
+  createCard(card.type, 30, shopYPositions[2], {faceUp: true, mini: true});
   card = decks.shop.cards.shift();
-  createCard(card.type, 30, 460, {faceUp: true, mini: true});
+  createCard(card.type, 30, shopYPositions[3], {faceUp: true, mini: true});
 }
 
 function populateCurrentPlayerHand() {
@@ -243,8 +267,11 @@ function compactCardsIfNecessary() {
   const newSpacing = availableSpace / cardCount;
   const cards = decks.shaft.cards;
   for (let i=0; i<cardCount; i++) {
+    if (cards.length-1 - i < 0) {
+      // we've exhausted the deck
+      return;
+    }
     const card = cards[cards.length-1 - i];
-    console.log('adjusting:', card);
     card.domElement.css('left', mineshaftLeftX + i*newSpacing);
     card.domElement.css('z-index', i);
   }
@@ -253,6 +280,8 @@ function compactCardsIfNecessary() {
 function revealCardFromShaft() {
   const cards = decks.shaft.cards;
   const nextCard = cards[cards.length-1 - decks.shaft.revealedCount];
+  if (!nextCard) return;
+
   compactCardsIfNecessary();
 
   nextCard.domElement.css('left', getNextCardPosition());
@@ -339,7 +368,8 @@ $(document).ready(function() {
   playArea.on('click', '.card.buyable', function() {
     const card = $(this);
     const type = card.data('type');
-    const indexInShop = card.index('.card.buyable');
+    const indexInShop = shopYPositions.indexOf(parseInt(card.css('top'), 10));
+    console.assert(indexInShop !== -1, 'Couldnt match bought card to index');
 
     const cardTypeData = getCardType(type);
 
@@ -351,7 +381,13 @@ $(document).ready(function() {
       return;
     }
 
+    // pay for card
+    buyingPlayer.money -= cardTypeData.cost;
+    updatePlayerStatuses();
+
+    // move card to player deck
     const newPosition = { x: 800, y: 500 }; // getPlayerNewCardPosition();
+    card.css('z-index', 1);
     card.css('left', newPosition.x);
     card.css('top', newPosition.y);
     card.removeClass('mini buyable');
@@ -359,6 +395,19 @@ $(document).ready(function() {
       type: type,
       domElement: card
     });
+
+    setTimeout(function() {
+      card.css('z-index', 0);
+    }, 600)
+
+    // replenish store offer
+    const newTypes = [
+      'pickaxe',
+      'tnt',
+      getRandomItem(['minecart', 'lantern', 'sabotage', 'subshaft', 'sieve']),
+      getRandomItem(['minecart', 'lantern', 'sabotage', 'subshaft', 'sieve'])
+    ];
+    createCard(newTypes[indexInShop], 30, shopYPositions[indexInShop], {faceUp: true, mini: true});
   });
 
   $('#end-turn-button').on('click', endPlayerTurn);

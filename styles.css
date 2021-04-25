@@ -48,11 +48,15 @@ body {
   border-radius: 8px;
   cursor: pointer;
   background-color: #662c1c;;
-  box-shadow: 4px 2px 5px rgba(0,0,0,0.4);
+  box-shadow: 4px 2px 5px rgba(0, 0, 0, 0.4);
 }
 
 .card.passive {
   cursor: default;
+}
+
+.card:not(.passive):hover {
+  box-shadow: 6px 3px 10px rgba(0, 0, 0, 0.8);
 }
 
 .card.treasure {

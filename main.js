@@ -3,7 +3,7 @@ const decks = {
   player1: {
     cards: [
       { type: 'pickaxe' },
-      { type: 'tnt' }, // FIXME this is just visual debug
+      { type: 'pickaxe' },
       { type: 'pickaxe' },
     ]
   },
@@ -44,6 +44,8 @@ const decks = {
   }
 };
 
+let player1Money = 0;
+let player2Money = 0;
 let currentPlayer = 1; // 1 or 2
 
 let playArea;
@@ -273,6 +275,28 @@ function endPlayerTurn() {
   console.log('end turn');
 }
 
+function updatePlayerStatuses() {
+  const details1 = player1Status.find('.details');
+  const carry1 = 1;
+  decks.player1.cards.forEach(card => {
+    if (card.type === 'minecart') {
+      carry1++;
+    }
+  });
+  details1.find('.carry-value').text(carry1);
+  details1.find('.money-value').text(player1Money);
+
+  const details2 = player2Status.find('.details');
+  const carry2 = 1;
+  decks.player2.cards.forEach(card => {
+    if (card.type === 'minecart') {
+      carry2++;
+    }
+  });
+  details2.find('.carry-value').text(carry2);
+  details2.find('.money-value').text(player2Money);
+}
+
 (function init() {
   // preload card images
   for (const [key, type] of Object.entries(toolCardTypes)) {
@@ -299,6 +323,7 @@ $(document).ready(function() {
   populateShop();
   populateCurrentPlayerHand();
   populateWaitingPlayerHand();
+  updatePlayerStatuses();
 
   // debug: random card in the middle
   //createCard('pickaxe', 400, 170, {faceUp: true});

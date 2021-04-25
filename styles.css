@@ -1,5 +1,6 @@
 body {
   user-select: none;
+  font-family: 'Alfa Slab One', serif;
 }
 
 #play-area {
@@ -19,7 +20,6 @@ body {
 }
 
 #purchase-area .header {
-  font-family: 'Alfa Slab One', serif;
   font-size: 20px;
   transform-origin: top left;
   transform: rotate(270deg);
@@ -37,6 +37,27 @@ body {
   height: 1px;
   border-bottom: 3px dashed black;
   opacity: 0.3;
+}
+
+.player-status {
+  font-size: 20px;
+  position: absolute;
+}
+
+.player-status.current {
+  bottom: 20px;
+  right: 20px;
+}
+.player-status:not(.current) {
+  top: 20px;
+  right: 20px;
+}
+
+.player-status.blue {
+  color: blue;
+}
+.player-status.red {
+  color: red;
 }
 
 .card {
@@ -90,7 +111,6 @@ body {
   border-radius: 11px;
   font-size: 16px;
   text-align: center;
-  font-family: 'Alfa Slab One', serif;
 }
 
 .card .header {
@@ -100,7 +120,6 @@ body {
   height: 32px;
   line-height: 32px;
   font-size: 20px;
-  font-family: 'Alfa Slab One', serif;
   letter-spacing: 1px;
   text-align: center;
 }
@@ -123,6 +142,7 @@ body {
   height: 80px; /* overflow is hidden anyway */
   padding: 20px;
   text-align: center;
+  font-family: serif;
 }
 
 #shaft-display {

@@ -30,8 +30,11 @@ const decks = {
   }
 };
 
-let playArea;
 let currentPlayer = 1; // 1 or 2
+
+let playArea;
+let player1Status;
+let player2Status;
 
 // utils -- TODO: move to separate file
 function getRandomItem(array) {
@@ -191,6 +194,8 @@ function populateWaitingPlayerHand() {
 
 $(document).ready(function() {
   playArea = $('#play-area');
+  player1Status = $('#player1-status');
+  player2Status = $('#player2-status');
 
   playArea.on('click', '.card:not(.passive)', function() {
     console.log('card click, type:', $(this).data('type'));

@@ -259,6 +259,20 @@ function revealCardFromShaft() {
   decks.shaft.revealedCount++;
 }
 
+function returnCardsToShaft() {
+  decks.shaft.revealedCount = 0;
+  decks.shaft.cards.forEach(card => {
+    card.domElement.addClass('face-down');
+    card.domElement.css('left', decks.shaft.position.x);
+    card.domElement.css('z-index', 0);
+  });
+}
+
+function endPlayerTurn() {
+  returnCardsToShaft();
+  console.log('end turn');
+}
+
 (function init() {
   // preload card images
   for (const [key, type] of Object.entries(toolCardTypes)) {
@@ -278,6 +292,8 @@ $(document).ready(function() {
     console.log('card click, type:', $(this).data('type'));
     revealCardFromShaft();
   });
+
+  $('#end-turn-button').on('click', endPlayerTurn);
 
   populateShaftDeck();
   populateShop();

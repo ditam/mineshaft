@@ -25,19 +25,29 @@ const decks = {
     },
     cards: [
       // bottom-first so it can be dumped into DOM naively
-      { type: 'gold' },
+      { type: 'diamond' },
+      { type: 'rock' },
+      { type: 'rock' },
+      { type: 'rock' },
+      { type: 'platinum' },
       { type: 'silver' },
       { type: 'gold' },
       { type: 'soil' },
+      { type: 'soil' },
+      { type: 'gold' },
+      { type: 'soil' },
       { type: 'gold' },
       { type: 'rock' },
       { type: 'rock' },
+      { type: 'soil' },
+      { type: 'soil' },
       { type: 'soil' },
       { type: 'platinum' },
       { type: 'soil' },
       { type: 'platinum' },
       { type: 'gold' },
       { type: 'rock' },
+      { type: 'soil' },
       { type: 'soil' },
       { type: 'silver' },
       { type: 'gold' },
@@ -399,7 +409,10 @@ function endPlayerTurn() {
   layoutCurrentPlayerHand();
   layoutWaitingPlayerHand();
 
-  if (currentPlayer === 2 && gameMode === 'ai') {
+  if (!deckHasCard(decks.shaft.cards, 'diamond')) {
+    const winner = decks.player1.money > decks.player2.money? 'Player 1' : decks.player2.name;
+     $('#lantern-viewer').addClass('visible').text('The winner is ' + winner + '!');
+  } else if (currentPlayer === 2 && gameMode === 'ai') {
     takeAITurn();
   }
 }

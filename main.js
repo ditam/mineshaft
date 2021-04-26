@@ -4,9 +4,9 @@ const decks = {
     money: 0,
     treasuresTakenThisRound: 0,
     cards: [
-      { type: 'tnt' },
       { type: 'pickaxe' },
-      { type: 'minecart' },
+      { type: 'pickaxe' },
+      { type: 'subshaft' }
     ]
   },
   player2: {
@@ -14,8 +14,8 @@ const decks = {
     treasuresTakenThisRound: 0,
     cards: [
       { type: 'pickaxe' },
-      { type: 'sabotage' },
-      { type: 'tnt' },
+      { type: 'pickaxe' },
+      { type: 'tnt' }
     ]
   },
   shaft: {
@@ -621,6 +621,17 @@ function playCard(cardElement, handIndex) {
         currentPlayerDeck.cards.splice(handIndex, 1);
         animateElementRemoval(cardElement);
       });
+      break;
+    case 'subshaft':
+      if (decks.shaft.revealedCount === 0) {
+        showError('Use the main shaft first...');
+        return;
+      }
+      if (decks.shaft.revealedCount > 0 && lastRevealedCard.type !== 'rock') {
+        showError('Wait until you\'re blocked by stones...');
+        return;
+      }
+      revealCardFromShaft();
       break;
     default:
       console.assert(false, 'playCard unknown card type:' + type)

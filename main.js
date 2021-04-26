@@ -148,7 +148,7 @@ const toolCardTypes = {
   'pickaxe': {
     assetURL: 'assets/pickaxe.png',
     cost: 0,
-    description: 'Reveal a new card from the shaft deck. Blocked by stone.',
+    description: 'Reveal a new card from the shaft deck. Blocked by rock.',
     displayName: 'Pickaxe'
   },
   'sabotage': {
@@ -166,7 +166,7 @@ const toolCardTypes = {
   'subshaft': {
     assetURL: 'assets/subshaft.png',
     cost: 2,
-    description: 'Bypass a stone card.',
+    description: 'Bypass a rock card.',
     displayName: 'Sub-shaft'
   },
   'tnt': {
@@ -626,7 +626,7 @@ function playCard(cardElement, handIndex) {
   switch(type) {
     case 'pickaxe':
       if (decks.shaft.revealedCount > 0 && lastRevealedCard.type === 'rock') {
-        showError('Can\'t dig, stone in the way.');
+        showError('Can\'t dig, rock in the way.');
         return;
       }
       if (decks.shaft.revealedCount === decks.shaft.cards.length) {
@@ -685,7 +685,7 @@ function playCard(cardElement, handIndex) {
         return;
       }
       if (decks.shaft.revealedCount > 0 && lastRevealedCard.type !== 'rock') {
-        showError('Wait until you\'re blocked by stones...');
+        showError('Wait until you\'re blocked by rock...');
         return;
       }
       revealCardFromShaft();

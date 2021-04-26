@@ -421,6 +421,7 @@ function endPlayerTurn() {
   decks.player2.treasuresTakenThisRound = 0;
   currentPlayer = (currentPlayer === 1)? 2 : 1;
   updatePlayerStatuses();
+  updateShaftDeckCounter();
   layoutCurrentPlayerHand();
   layoutWaitingPlayerHand();
 
@@ -724,6 +725,10 @@ function playCard(cardElement, handIndex) {
   currentRoundIsDigging = true;
 }
 
+function updateShaftDeckCounter() {
+  $('#shaft-counter').text(decks.shaft.cards.length - decks.shaft.revealedCount);
+}
+
 (function init() {
   // preload card images
   for (const [key, type] of Object.entries(toolCardTypes)) {
@@ -744,6 +749,7 @@ $(document).ready(function() {
     const currentPlayerDeck = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
     const indexInHand = getCardIndexFromDomElement(currentPlayerDeck, card);
     playCard(card, indexInHand);
+    updateShaftDeckCounter();
   });
 
   const swapPair = [];
@@ -846,6 +852,7 @@ $(document).ready(function() {
   layoutCurrentPlayerHand();
   layoutWaitingPlayerHand();
   updatePlayerStatuses();
+  updateShaftDeckCounter();
 
   setGameMode('ai');
 

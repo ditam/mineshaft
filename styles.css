@@ -343,3 +343,16 @@ body {
   background-color: rgba(100, 100, 100, 0.8);
   z-index: 100;
 }
+
+#shaft-counter {
+  position: absolute;
+  top: 150px;
+  left: 1231px;
+  width: 55px;
+  height: 55px;
+  line-height: 55px;
+  text-align: center;
+  border-radius: 51px;
+  color: rgba(0,0,0,0.15);
+  background-color: rgba(0,0,0,0.15);
+}

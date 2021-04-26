@@ -149,14 +149,14 @@ body {
 }
 
 .card.treasure .card-back {
-  border: 3px solid gray;
+  border: 3px solid #4f4c4c;
 
   background: repeating-linear-gradient(
     135deg,
-    #c0c0c0 0,
-    #c0c0c0 16px,
-    #d0d0d0 16px,
-    #d0d0d0 32px
+    #8c8a8a 0,
+    #8c8a8a 16px,
+    #777575 16px,
+    #777575 32px
   );
 }
 

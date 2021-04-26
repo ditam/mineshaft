@@ -82,6 +82,8 @@ function setGameMode(mode) {
 
 let currentPlayer = 1; // 1 or 2
 
+let currentRoundIsDigging = false;
+
 let errorMsg;
 let playArea;
 let player1Status;
@@ -409,8 +411,10 @@ function returnCardsToShaft() {
 
 function endPlayerTurn() {
   // hack: something's wrong with sabotage, see setup [TPM][PST] and turns P,T, pass, P
+  // TODO: should be fixed now, investigate removing this
   $('.card').removeClass('sabotage-select');
 
+  currentRoundIsDigging = false;
   returnCardsToShaft();
   $('.card.treasure').removeClass('unavailable');
   decks.player1.treasuresTakenThisRound = 0;
@@ -715,8 +719,9 @@ function playCard(cardElement, handIndex) {
       break;
   }
 
-  // if we reached this point, the card was played - we mark it as played
+  // if we reached this point, the card was played - we mark it as played and the round as a dig
   cardElement.addClass('face-down');
+  currentRoundIsDigging = true;
 }
 
 (function init() {
@@ -781,6 +786,10 @@ $(document).ready(function() {
   });
 
   playArea.on('click', '.card.buyable', function() {
+    if (currentRoundIsDigging) {
+      showError('Can\'t buy this round - already played cards.');
+      return;
+    }
     const card = $(this);
     const type = card.data('type');
     const indexInShop = shopYPositions.indexOf(parseInt(card.css('top'), 10));

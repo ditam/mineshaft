@@ -653,16 +653,26 @@ function playCard(cardElement, handIndex) {
       showError('This is not an action card. (The bonus is passive.)');
       return;
     case 'sabotage':
+      let tntCard;
       const hasTNT = currentPlayerDeck.cards.some(card => {
+        if (card.type === 'tnt') {
+          tntCard = card;
+        }
         return card.type === 'tnt';
       });
       if (!hasTNT) {
         showError('Needs a TNT card in hand.');
         return;
       }
+      console.log('found TNT card:', tntCard);
       showSabotageSelector(function() {
+        // remove sabotage card
         currentPlayerDeck.cards.splice(handIndex, 1);
         animateElementRemoval(cardElement);
+        // remove TNT card
+        const tntCardIndex = getCardIndexFromDomElement(currentPlayerDeck.cards, tntCard.domElement);
+        currentPlayerDeck.cards.splice(tntCardIndex, 1);
+        animateElementRemoval(tntCard.domElement);
       });
       break;
     case 'subshaft':

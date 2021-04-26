@@ -436,18 +436,27 @@ function endPlayerTurn() {
 function takeAITurn() {
   let digCount = 0;
   const cards = decks.player2.cards;
+  let lastPickaxeCount;
   function digWhilePossible() {
     // NB: the deck does not contain information about playability, so we inspect the DOM instead
-    const hasPickaxeLeft = $('.card.tool.playable.pickaxe:not(.face-down)').length > 0;
+    const pickaxeCount = $('.card.tool.playable.pickaxe:not(.face-down)').length;
+    const hasPickaxeLeft = pickaxeCount > 0;
+    const hasTNTLeft = $('.card.tool.playable.tnt:not(.face-down)').length > 0;
     console.log('--dig check', hasPickaxeLeft);
     if (hasPickaxeLeft && digCount <= 2) {
       delay(function() {
         $('.card.tool.playable.pickaxe:not(.face-down)').first().click();
         digCount++;
       }, digWhilePossible);
+    } else if(pickaxeCount === lastPickaxeCount && decks.shaft.revealedCount > 0 && hasTNTLeft) {
+      delay(function() {
+        $('.card.tool.playable.tnt:not(.face-down)').first().click();
+        // digging's back on the menu, boys!
+        digCount=0;
+      }, digWhilePossible);
     } else {
       let found;
-      ['platinum', 'gold', 'silver'].some(function(type) {
+      ['diamond', 'platinum', 'gold', 'silver', 'soil'].some(function(type) {
         if ($('.card.treasure:not(.face-down).' + type).length > 0) {
           found = type;
           return true;
@@ -458,6 +467,7 @@ function takeAITurn() {
       }
       delay(endPlayerTurn);
     }
+    lastPickaxeCount = pickaxeCount;
   }
 
   console.log('AI turn start...', deckHasCard(cards, 'sabotage'), deckHasCard(cards, 'tnt'));
@@ -489,6 +499,19 @@ function takeAITurn() {
     // if it has money and it sees a sabotage, buy it
     else if (decks.player2.money >= 2 && $('.card.tool.buyable.sabotage').length > 0) {
       $('.card.tool.buyable.sabotage').first().click();
+    }
+    // if it lost cards, rebuy pickaxes
+    else if (cards.length < 3) {
+      $('.card.tool.buyable.pickaxe').first().click();
+    }
+    // if the top card is a rock (psst, cheating by looking at shaft deck),
+    // but we have no TNT, buy some (note that next round digWhilePossible will use it)
+    else if (decks.shaft.cards[decks.shaft.cards.length-1].type === 'rock' && !deckHasCard(cards, 'tnt')) {
+      $('.card.tool.buyable.tnt').first().click();
+    }
+    // with a small random chance, buy more TNT for good measure (mindgames?)
+    else if (Math.random() < 0.1) {
+      $('.card.tool.buyable.tnt').first().click();
     }
     // otherwise just dig
     else {

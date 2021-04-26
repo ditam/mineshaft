@@ -117,6 +117,17 @@ function delay(fn, fnNext) {
     }
   }, 1200);
 }
+
+function getCardIndexFromDomElement(cards, el) {
+  for (let i=0; i<cards.length; i++) {
+    const card = cards[i];
+    // NB: we are comparing jquery collections, == and === will not indicate a match
+    if (card.domElement.is(el)) {
+      return i;
+    }
+  }
+  console.assert(false, 'Could not find element in card array')
+}
 // end utils
 
 const toolCardTypes = {
@@ -589,7 +600,6 @@ function animateElementRemoval(el, target) {
 
 function playCard(cardElement, handIndex) {
   const type = cardElement.data('type');
-  const cardType = getCardType(type);
   console.log('Playing card:', type, handIndex);
 
   if ($('.sabotage-select').length > 0) {
@@ -712,7 +722,8 @@ $(document).ready(function() {
 
   playArea.on('click', '.card:not(.face-down).playable', function() {
     const card = $(this);
-    const indexInHand = card.index('.card.playable');
+    const currentPlayerDeck = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
+    const indexInHand = getCardIndexFromDomElement(currentPlayerDeck, card);
     playCard(card, indexInHand);
   });
 

@@ -72,7 +72,7 @@ const decks = {
 const trashPosition = { x: 1500, y: -300 };
 const treasuresPosition = { x: 1500, y: 800 };
 
-let gameMode; // or 'hot-seat';
+let gameMode; // 'ai' or 'hotseat';
 
 function setGameMode(mode) {
   gameMode = mode;
@@ -855,6 +855,16 @@ $(document).ready(function() {
   updateShaftDeckCounter();
 
   setGameMode('ai');
+
+  $('#welcome-screen .button.hotseat').on('click', function() {
+    setGameMode('hotseat');
+    $('#welcome-screen').remove();
+  })
+
+  $('#welcome-screen .button.ai').on('click', function() {
+    setGameMode('ai');
+    $('#welcome-screen').remove();
+  })
 
   // debug: random card in the middle
   //createCard('pickaxe', 400, 170, {faceUp: true});

@@ -6,7 +6,7 @@ const decks = {
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
-      { type: 'subshaft' }
+      { type: 'lantern' }
     ]
   },
   player2: {
@@ -632,6 +632,23 @@ function playCard(cardElement, handIndex) {
         return;
       }
       revealCardFromShaft();
+      break;
+    case 'lantern':
+      const el = $('#lantern-viewer');
+      el.empty();
+      el.addClass('visible');
+      const first = cardsInShaft[lastRevealedIndex-1];
+      const second = cardsInShaft[lastRevealedIndex-2];
+      const third = cardsInShaft[lastRevealedIndex-3];
+      el.text('The next three cards are: ' + [
+        getCardType(first.type).displayName,
+        getCardType(second.type).displayName,
+        getCardType(third.type).displayName
+      ].join(','));
+
+      setTimeout(function() {
+        el.removeClass('visible');
+      }, 4000);
       break;
     default:
       console.assert(false, 'playCard unknown card type:' + type)

@@ -299,3 +299,20 @@ body {
   background-color: darkred;
   color: black;
 }
+
+#lantern-viewer {
+  position: absolute;
+  top: 2000px;
+}
+
+#lantern-viewer.visible {
+  position: absolute;
+  top: 200px;
+  left: 400px;
+  width: 260px;
+  height: 100px;
+  text-align: center;
+  padding-top: 50px;
+  line-height: 25px;
+  background-color: rgba(100, 100, 100, 0.8);
+}

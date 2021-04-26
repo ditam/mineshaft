@@ -207,6 +207,10 @@ body {
   opacity: 0.99;
 }
 
+.card.swap-selected {
+  box-shadow: 6px 3px 10px green;
+}
+
 .card .cost {
   position: absolute;
   top: 5px;

@@ -6,7 +6,9 @@ const decks = {
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
-      { type: 'lantern' }
+      { type: 'pickaxe' },
+      { type: 'pickaxe' },
+      { type: 'sieve' }
     ]
   },
   player2: {
@@ -650,6 +652,13 @@ function playCard(cardElement, handIndex) {
         el.removeClass('visible');
       }, 4000);
       break;
+    case 'sieve':
+      if (decks.shaft.revealedCount < 2) {
+        showError('Needs at least 2 revealed cards.');
+        return;
+      }
+      $('.card.treasure:not(.face-down)').addClass('swappable');
+      break;
     default:
       console.assert(false, 'playCard unknown card type:' + type)
       break;
@@ -678,6 +687,37 @@ $(document).ready(function() {
     const card = $(this);
     const indexInHand = card.index('.card.playable');
     playCard(card, indexInHand);
+  });
+
+  const swapPair = [];
+  playArea.on('click', '.card:not(.face-down).swappable', function() {
+    const card = $(this);
+    // note that all the shaft cards are generated, so we can count index amongst them directly
+    const cardIndex = card.index('.card.treasure');
+    card.addClass('swap-selected');
+    swapPair.push(cardIndex);
+    console.log('swap select:', card, cardIndex);
+    if ($('.swap-selected').length === 2) {
+      // swap on UI
+      const first = $('.swap-selected').first();
+      const last = $('.swap-selected').last();
+      const firstLeft = first.css('left');
+      first.css('left', last.css('left'));
+      last.css('left', firstLeft);
+      // swap in shaft
+      const i = swapPair[0];
+      const j = swapPair[1];
+      const tmp = {
+        type: decks.shaft.cards[i].type,
+        domElement: decks.shaft.cards[i].domElement
+      };
+      decks.shaft.cards[i] = decks.shaft.cards[j];
+      decks.shaft.cards[j] = tmp;
+      // cleanup
+      swapPair.pop();
+      swapPair.pop();
+      $('.card').removeClass('swap-selected');
+    }
   });
 
   playArea.on('click', '.card.treasure:not(.face-down):not(.unavailable):not(.forbidden)', function() {

@@ -568,10 +568,14 @@ function showSabotageSelector(callback) {
   const enemyCards = $('.card.upside-down');
   enemyCards.addClass('sabotage-select')
   enemyCards.removeClass('face-down');
-  enemyCards.one('click', function() {
+  let count = 0;
+  enemyCards.on('click.sabotage', function() {
+    enemyCards.off('click.sabotage');
+    count++;
+    console.assert(count===1, 'sabotage handler ran multiple times '+count);
     // remove card
     const card = $(this);
-    const handIndex = card.index('.sabotage-select');
+    const handIndex = getCardIndexFromDomElement(enemyPlayer.cards, card);
     animateElementRemoval(card);
     enemyPlayer.cards.splice(handIndex, 1);
 

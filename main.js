@@ -6,7 +6,7 @@ const decks = {
     cards: [
       { type: 'tnt' },
       { type: 'pickaxe' },
-      { type: 'sabotage' },
+      { type: 'minecart' },
     ]
   },
   player2: {
@@ -14,8 +14,8 @@ const decks = {
     treasuresTakenThisRound: 0,
     cards: [
       { type: 'pickaxe' },
-      { type: 'pickaxe' },
-      { type: 'pickaxe' },
+      { type: 'sabotage' },
+      { type: 'tnt' },
     ]
   },
   shaft: {
@@ -52,7 +52,13 @@ const decks = {
 const trashPosition = { x: 1500, y: -300 };
 const treasuresPosition = { x: 1500, y: 800 };
 
-const gameMode = 'hot-seat';
+let gameMode; // or 'hot-seat';
+
+function setGameMode(mode) {
+  gameMode = mode;
+  decks.player2.name = (mode === 'ai')? 'Mr. AI' : 'Player2';
+  updatePlayerStatuses();
+}
 
 let currentPlayer = 1; // 1 or 2
 
@@ -75,6 +81,21 @@ function preloadImage(url)
 
 function deepCopy(o) {
   return JSON.parse(JSON.stringify(o));
+}
+
+function deckHasCard(deck, cardType) {
+  return deck.some(card => {
+    return card.type === cardType;
+  });
+}
+
+function delay(fn, fnNext) {
+  setTimeout(function() {
+    fn();
+    if (fnNext && typeof fnNext === 'function') {
+      delay(fnNext);
+    }
+  }, 1200);
 }
 // end utils
 
@@ -251,7 +272,6 @@ const playerCardTopY = -150;
 function _layoutPlayerHand(cards, y, faceUp) {
   const count = cards.length;
   cards.forEach((card, i) => {
-    console.log(i, card);
     let x;
     if (!card.domElement) {
       console.log('creating card', card);
@@ -268,6 +288,8 @@ function _layoutPlayerHand(cards, y, faceUp) {
     card.domElement.css('top', y);
     card.domElement.css('z-index', i);
     card.domElement.toggleClass('face-down', !faceUp);
+    card.domElement.toggleClass('upside-down', !faceUp);
+    card.domElement.toggleClass('playable', faceUp);
   })
 }
 
@@ -357,6 +379,59 @@ function endPlayerTurn() {
   updatePlayerStatuses();
   layoutCurrentPlayerHand();
   layoutWaitingPlayerHand();
+
+  if (currentPlayer === 2 && gameMode === 'ai') {
+    takeAITurn();
+  }
+}
+
+function takeAITurn() {
+  const cards = decks.player2.cards;
+  function digWhilePossible() {
+    // NB: the deck does not contain information about playability, so we inspect the DOM instead
+    const hasPickaxeLeft = $('.card.tool.playable.pickaxe:not(.face-down)').length > 0;
+    console.log('--dig check', hasPickaxeLeft);
+    if (hasPickaxeLeft) {
+      // FIXME: this will get stuck on stones, user has to override...
+      delay(function() {
+        $('.card.tool.playable.pickaxe:not(.face-down)').first().click();
+      }, digWhilePossible);
+    } else {
+      endPlayerTurn();
+    }
+  }
+
+  console.log('AI turn start...', deckHasCard(cards, 'sabotage'), deckHasCard(cards, 'tnt'));
+  delay(function() {
+    // if it has a sabotage card and TNT, play it
+    if (deckHasCard(cards, 'sabotage') && deckHasCard(cards, 'tnt')) {
+      $('.card.tool.playable.sabotage').first().click();
+      const humanCards = decks.player1.cards;
+      console.log('checking human cards...');
+      let found;
+      ['sabotage', 'minecart', 'subshaft'].some(function(type) {
+        if (deckHasCard(humanCards, type)) {
+          found = type;
+          return true;
+        }
+      });
+      console.log('found:', found);
+      if (found) {
+        $('.card.tool.sabotage-select.' + found).first().click();
+      } else {
+        $('.card.tool.sabotage-select').first().click();
+      }
+      digWhilePossible();
+    }
+    // if it has a sabotage, but not TNT, buy TNT
+    else if (deckHasCard(cards, 'sabotage') && !deckHasCard(cards, 'tnt')) {
+      $('.card.tool.buyable.tnt').first().click();
+    }
+    // if it has money, it sees a sabotage, and the opponent has expensive cards, buy sabotage
+    else {
+      digWhilePossible();
+    }
+  });
 }
 
 function updatePlayerStatuses() {
@@ -371,6 +446,9 @@ function updatePlayerStatuses() {
   carry1 -= decks.player1.treasuresTakenThisRound;
   details1.find('.carry-value').text(carry1);
   details1.find('.money-value').text(decks.player1.money);
+
+  const name = player2Status.find('.name');
+  name.text(decks.player2.name);
 
   const details2 = player2Status.find('.details');
   let carry2 = 1;
@@ -428,6 +506,7 @@ function takeTreasure(cardElement, indexInShaftDeck) {
 }
 
 function showSabotageSelector(callback) {
+  console.log('--sabotage running--');
   const enemyPlayer = (currentPlayer === 1)? decks.player2 : decks.player1;
   const enemyCards = $('.card.upside-down');
   enemyCards.addClass('sabotage-select')
@@ -480,7 +559,6 @@ function playCard(cardElement, handIndex) {
   switch(type) {
     case 'pickaxe':
       if (decks.shaft.revealedCount > 0 && lastRevealedCard.type === 'rock') {
-        console.log('showing error');
         showError('Can\'t dig, stone in the way.');
         return;
       }
@@ -619,6 +697,8 @@ $(document).ready(function() {
   layoutCurrentPlayerHand();
   layoutWaitingPlayerHand();
   updatePlayerStatuses();
+
+  setGameMode('ai');
 
   // debug: random card in the middle
   //createCard('pickaxe', 400, 170, {faceUp: true});

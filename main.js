@@ -6,9 +6,7 @@ const decks = {
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
-      { type: 'pickaxe' },
-      { type: 'pickaxe' },
-      { type: 'sieve' }
+      { type: 'pickaxe' }
     ]
   },
   player2: {
@@ -17,7 +15,7 @@ const decks = {
     cards: [
       { type: 'pickaxe' },
       { type: 'pickaxe' },
-      { type: 'tnt' }
+      { type: 'pickaxe' }
     ]
   },
   shaft: {
@@ -27,6 +25,16 @@ const decks = {
     },
     cards: [
       // bottom-first so it can be dumped into DOM naively
+      { type: 'gold' },
+      { type: 'silver' },
+      { type: 'gold' },
+      { type: 'soil' },
+      { type: 'gold' },
+      { type: 'rock' },
+      { type: 'rock' },
+      { type: 'soil' },
+      { type: 'platinum' },
+      { type: 'soil' },
       { type: 'platinum' },
       { type: 'gold' },
       { type: 'rock' },
@@ -147,6 +155,12 @@ const toolCardTypes = {
 };
 
 const shaftCardTypes = {
+  'diamond': {
+    assetURL: 'assets/diamond-icon.png',
+    bgColor: '#65ffff',
+    cost: 5,
+    displayName: 'Diamond'
+  },
   'gold': {
     assetURL: 'assets/gold-icon.png',
     bgColor: '#d4af37',

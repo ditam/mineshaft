@@ -203,6 +203,7 @@ body {
   width: 206px;
   height: 166px;
   background-color: #80808071;
+  text-shadow: 2px 2px 3px white;
   /* This also seems necessary, what's up with these :after elements... */
   opacity: 0.99;
 }
@@ -215,17 +216,18 @@ body {
   position: absolute;
   top: 5px;
   left: 5px;
-  width: 22px;
-  height: 22px;
-  line-height: 22px;
-  background-color: #ffe919;
-  border-radius: 11px;
-  font-size: 16px;
+  width: 39px;
+  height: 39px;
+  line-height: 40px;
+  background-color: #e0b80d;
+  border: 1px solid #a7620c;
+  border-radius: 30px;
+  font-size: 20px;
   text-align: center;
 }
 
 .card .header {
-  background-color: #c37811;
+  background-color: #868482;
   margin-top: 8px;
   width: 100%;
   height: 32px;
@@ -233,6 +235,10 @@ body {
   font-size: 20px;
   letter-spacing: 1px;
   text-align: center;
+}
+
+.card.playable:hover {
+  top: 600px;
 }
 
 .card img {
@@ -249,7 +255,7 @@ body {
 }
 
 .card .description {
-  background-color: #c37811;
+  background-color: #a5a5a563;
   height: 80px; /* overflow is hidden anyway */
   padding: 20px;
   text-align: center;
@@ -271,7 +277,7 @@ body {
   text-transform: uppercase;
   font-family: 'Alfa Slab One', serif;
   font-size: 115px;
-  opacity: 0.05;
+  opacity: 0.25;
   user-select: none;
 }
 

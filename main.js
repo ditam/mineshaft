@@ -371,6 +371,9 @@ function returnCardsToShaft() {
 }
 
 function endPlayerTurn() {
+  // hack: something's wrong with sabotage, see setup [TPM][PST] and turns P,T, pass, P
+  $('.card').removeClass('sabotage-select');
+
   returnCardsToShaft();
   $('.card.treasure').removeClass('unavailable');
   decks.player1.treasuresTakenThisRound = 0;
@@ -408,7 +411,7 @@ function takeAITurn() {
       if (found) {
         $('.card.treasure:not(.face-down).' + found).first().click();
       }
-      endPlayerTurn();
+      delay(endPlayerTurn);
     }
   }
 
@@ -521,7 +524,6 @@ function takeTreasure(cardElement, indexInShaftDeck) {
 }
 
 function showSabotageSelector(callback) {
-  console.log('--sabotage running--');
   const enemyPlayer = (currentPlayer === 1)? decks.player2 : decks.player1;
   const enemyCards = $('.card.upside-down');
   enemyCards.addClass('sabotage-select')
@@ -543,6 +545,8 @@ function showSabotageSelector(callback) {
 }
 
 function animateElementRemoval(el, target) {
+  //console.log('animateRemoval');
+  //console.trace();
   if (!target) {
     target = trashPosition;
   }
@@ -557,6 +561,7 @@ function animateElementRemoval(el, target) {
 function playCard(cardElement, handIndex) {
   const type = cardElement.data('type');
   const cardType = getCardType(type);
+  console.log('Playing card:', type, handIndex);
 
   if ($('.sabotage-select').length > 0) {
     showError('Select a card (above) to sabotage.');

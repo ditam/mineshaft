@@ -386,17 +386,28 @@ function endPlayerTurn() {
 }
 
 function takeAITurn() {
+  let digCount = 0;
   const cards = decks.player2.cards;
   function digWhilePossible() {
     // NB: the deck does not contain information about playability, so we inspect the DOM instead
     const hasPickaxeLeft = $('.card.tool.playable.pickaxe:not(.face-down)').length > 0;
     console.log('--dig check', hasPickaxeLeft);
-    if (hasPickaxeLeft) {
-      // FIXME: this will get stuck on stones, user has to override...
+    if (hasPickaxeLeft && digCount <= 2) {
       delay(function() {
         $('.card.tool.playable.pickaxe:not(.face-down)').first().click();
+        digCount++;
       }, digWhilePossible);
     } else {
+      let found;
+      ['platinum', 'gold', 'silver'].some(function(type) {
+        if ($('.card.treasure:not(.face-down).' + type).length > 0) {
+          found = type;
+          return true;
+        }
+      });
+      if (found) {
+        $('.card.treasure:not(.face-down).' + found).first().click();
+      }
       endPlayerTurn();
     }
   }
@@ -427,7 +438,11 @@ function takeAITurn() {
     else if (deckHasCard(cards, 'sabotage') && !deckHasCard(cards, 'tnt')) {
       $('.card.tool.buyable.tnt').first().click();
     }
-    // if it has money, it sees a sabotage, and the opponent has expensive cards, buy sabotage
+    // if it has money and it sees a sabotage, buy it
+    else if (decks.player2.money >= 2 && $('.card.tool.buyable.sabotage').length > 0) {
+      $('.card.tool.buyable.sabotage').first().click();
+    }
+    // otherwise just dig
     else {
       digWhilePossible();
     }

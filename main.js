@@ -721,11 +721,10 @@ function playCard(cardElement, handIndex) {
       const first = cardsInShaft[lastRevealedIndex-1];
       const second = cardsInShaft[lastRevealedIndex-2];
       const third = cardsInShaft[lastRevealedIndex-3];
-      el.text('The next three cards are: ' + [
-        getCardType(first.type).displayName,
-        getCardType(second.type).displayName,
-        getCardType(third.type).displayName
-      ].join(','));
+      const name1 = first? getCardType(first.type).displayName : '-';
+      const name2 = second? getCardType(second.type).displayName : '-';
+      const name3 = third? getCardType(third.type).displayName : '-';
+      el.text('The next three cards are: ' + [name1, name2, name3].join(','));
 
       setTimeout(function() {
         el.removeClass('visible');

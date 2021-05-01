@@ -2,6 +2,7 @@
 const decks = {
   player1: {
     money: 0,
+    name: 'Player 1',
     treasuresTakenThisRound: 0,
     cards: [
       { type: 'pickaxe' },
@@ -76,7 +77,7 @@ let gameMode; // 'ai' or 'hotseat';
 
 function setGameMode(mode) {
   gameMode = mode;
-  decks.player2.name = (mode === 'ai')? 'Mr. AI' : 'Player2';
+  decks.player2.name = (mode === 'ai')? 'Mr. AI' : 'Player 2';
   updatePlayerStatuses();
 }
 
@@ -426,7 +427,7 @@ function endPlayerTurn() {
   layoutWaitingPlayerHand();
 
   if (!deckHasCard(decks.shaft.cards, 'diamond')) {
-    const winner = decks.player1.money > decks.player2.money? 'Player 1' : decks.player2.name;
+    const winner = decks.player1.money > decks.player2.money? decks.player1.name : decks.player2.name;
      $('#lantern-viewer').addClass('visible').text('The winner is ' + winner + '!');
   } else if (currentPlayer === 2 && gameMode === 'ai') {
     takeAITurn();

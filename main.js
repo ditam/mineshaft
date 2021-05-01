@@ -427,12 +427,23 @@ function endPlayerTurn() {
   layoutCurrentPlayerHand();
   layoutWaitingPlayerHand();
 
+  playArea.removeClass('interaction-disabled');
+
   if (!deckHasCard(decks.shaft.cards, 'diamond')) {
     const winner = decks.player1.money > decks.player2.money? decks.player1.name : decks.player2.name;
      $('#lantern-viewer').addClass('visible').text('The winner is ' + winner + '!');
   } else if (currentPlayer === 2 && gameMode === 'ai') {
     takeAITurn();
+    playArea.addClass('interaction-disabled');
   }
+}
+
+// removes .interaction-disabled and clicks the first element selected by selector.
+// Hacky... see refuseIfAITurn on how this works.
+function aiClick(selector) {
+  console.assert(selector, 'aiClick received no selector...');
+  playArea.removeClass('interaction-disabled');
+  $(selector).first().click();
 }
 
 function takeAITurn() {
@@ -447,12 +458,12 @@ function takeAITurn() {
     console.log('--dig check', hasPickaxeLeft);
     if (hasPickaxeLeft && digCount <= 2) {
       delay(function() {
-        $('.card.tool.playable.pickaxe:not(.face-down)').first().click();
+        aiClick('.card.tool.playable.pickaxe:not(.face-down)');
         digCount++;
       }, digWhilePossible);
     } else if(pickaxeCount === lastPickaxeCount && decks.shaft.revealedCount > 0 && hasTNTLeft) {
       delay(function() {
-        $('.card.tool.playable.tnt:not(.face-down)').first().click();
+        aiClick('.card.tool.playable.tnt:not(.face-down)');
         // digging's back on the menu, boys!
         digCount=0;
       }, digWhilePossible);
@@ -465,7 +476,7 @@ function takeAITurn() {
         }
       });
       if (found) {
-        $('.card.treasure:not(.face-down).' + found).first().click();
+        aiClick('.card.treasure:not(.face-down).' + found);
       }
       delay(endPlayerTurn);
     }
@@ -476,7 +487,7 @@ function takeAITurn() {
   delay(function() {
     // if it has a sabotage card and TNT, play it
     if (deckHasCard(cards, 'sabotage') && deckHasCard(cards, 'tnt')) {
-      $('.card.tool.playable.sabotage').first().click();
+      aiClick('.card.tool.playable.sabotage');
       const humanCards = decks.player1.cards;
       console.log('checking human cards...');
       let found;
@@ -488,32 +499,32 @@ function takeAITurn() {
       });
       console.log('found:', found);
       if (found) {
-        $('.card.tool.sabotage-select.' + found).first().click();
+        aiClick('.card.tool.sabotage-select.' + found);
       } else {
-        $('.card.tool.sabotage-select').first().click();
+        aiClick('.card.tool.sabotage-select');
       }
       digWhilePossible();
     }
     // if it has a sabotage, but not TNT, buy TNT
     else if (deckHasCard(cards, 'sabotage') && !deckHasCard(cards, 'tnt')) {
-      $('.card.tool.buyable.tnt').first().click();
+      aiClick('.card.tool.buyable.tnt');
     }
     // if it has money and it sees a sabotage, buy it
     else if (decks.player2.money >= 2 && $('.card.tool.buyable.sabotage').length > 0) {
-      $('.card.tool.buyable.sabotage').first().click();
+      aiClick('.card.tool.buyable.sabotage');
     }
     // if it lost cards, rebuy pickaxes
     else if (cards.length < 3) {
-      $('.card.tool.buyable.pickaxe').first().click();
+      aiClick('.card.tool.buyable.pickaxe');
     }
     // if the top card is a rock (psst, cheating by looking at shaft deck),
     // but we have no TNT, buy some (note that next round digWhilePossible will use it)
     else if (decks.shaft.cards[decks.shaft.cards.length-1].type === 'rock' && !deckHasCard(cards, 'tnt')) {
-      $('.card.tool.buyable.tnt').first().click();
+      aiClick('.card.tool.buyable.tnt');
     }
     // with a small random chance, buy more TNT for good measure (mindgames?)
     else if (Math.random() < 0.1) {
-      $('.card.tool.buyable.tnt').first().click();
+      aiClick('.card.tool.buyable.tnt');
     }
     // otherwise just dig
     else {
@@ -773,6 +784,24 @@ function refuseIfActionIsPending() {
   }
 }
 
+// This is a hack to disallow players from messing with the AI's turn:
+// during the AI turn we add a blocking interaction-disabled flag,
+// which is only removed temporarily immediately before the AI clicks
+// (This is bad because we need to make sure every AI click disables it, and every action re-adds it...)
+function refuseIfAITurn() {
+  if (playArea.hasClass('interaction-disabled')) {
+    console.assert(currentPlayer === 2 && gameMode === 'ai', 'Interaction blocked unexpectedly');
+    showError('Wait for your turn');
+    return true;
+  }
+}
+
+function disableInteractionIfNeeded() {
+  if (gameMode === 'ai' && currentPlayer === 2) {
+    playArea.addClass('interaction-disabled');
+  }
+}
+
 $(document).ready(function() {
   playArea = $('#play-area');
   player1Status = $('#player1-status');
@@ -780,9 +809,10 @@ $(document).ready(function() {
 
   // handle clicks on playable cards
   playArea.on('click', '.card:not(.face-down).playable', function() {
-    if (refuseIfActionIsPending()) {
+    if (refuseIfActionIsPending() || refuseIfAITurn()) {
       return;
     }
+    disableInteractionIfNeeded();
     const card = $(this);
     const currentPlayerDeck = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
     const indexInHand = getCardIndexFromDomElement(currentPlayerDeck, card);
@@ -793,6 +823,10 @@ $(document).ready(function() {
   // handle clicks on swappable cards during Sieve action
   const swapPair = [];
   playArea.on('click', '.card:not(.face-down).swappable', function(event) {
+    if (refuseIfAITurn()) {
+      return;
+    }
+    disableInteractionIfNeeded();
     const card = $(this);
     const cardIndex = getCardIndexFromDomElement(decks.shaft.cards, card);
     card.addClass('swap-selected');
@@ -834,9 +868,10 @@ $(document).ready(function() {
 
   // handle clicks on treasures in the mineshaft
   playArea.on('click', '.card.treasure:not(.face-down):not(.unavailable):not(.forbidden)', function() {
-    if (refuseIfActionIsPending()) {
+    if (refuseIfActionIsPending() || refuseIfAITurn()) {
       return;
     }
+    disableInteractionIfNeeded();
     const card = $(this);
     const cardIndex = getCardIndexFromDomElement(decks.shaft.cards, card);
     console.log('taking treasure:', card, cardIndex);
@@ -845,6 +880,10 @@ $(document).ready(function() {
 
   // handle card buying clicks
   playArea.on('click', '.card.buyable', function() {
+    if (refuseIfAITurn()) {
+      return;
+    }
+    disableInteractionIfNeeded();
     if (currentRoundIsDigging) {
       showError('Can\'t buy this round - already played cards.');
       return;
@@ -898,7 +937,12 @@ $(document).ready(function() {
     }, 1200);
   });
 
-  $('#end-turn-button').on('click', endPlayerTurn);
+  $('#end-turn-button').on('click', function() {
+    if (refuseIfAITurn()) {
+      return;
+    }
+    endPlayerTurn();
+  });
 
   populateShaftDeck();
   populateShop();

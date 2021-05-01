@@ -74,6 +74,7 @@ const trashPosition = { x: 1500, y: -300 };
 const treasuresPosition = { x: 1500, y: 800 };
 
 let gameMode; // 'ai' or 'hotseat';
+let pendingAction; // a card type, used to display helpful UI messages
 
 function setGameMode(mode) {
   gameMode = mode;
@@ -595,7 +596,9 @@ function takeTreasure(cardElement, indexInShaftDeck) {
 function showSabotageSelector(callback) {
   const enemyPlayer = (currentPlayer === 1)? decks.player2 : decks.player1;
   const enemyCards = $('.card.upside-down');
-  enemyCards.addClass('sabotage-select')
+  playArea.addClass('selection-pending');
+  pendingAction = 'sabotage';
+  enemyCards.addClass('sabotage-select');
   enemyCards.removeClass('face-down');
   let count = 0;
   enemyCards.on('click.sabotage', function() {
@@ -611,6 +614,8 @@ function showSabotageSelector(callback) {
     // reset card states
     enemyCards.addClass('face-down');
     enemyCards.removeClass('sabotage-select');
+    playArea.removeClass('selection-pending');
+    pendingAction = null;
 
     // signal done to caller
     callback();
@@ -634,11 +639,6 @@ function animateElementRemoval(el, target) {
 function playCard(cardElement, handIndex) {
   const type = cardElement.data('type');
   console.log('Playing card:', type, handIndex);
-
-  if ($('.sabotage-select').length > 0) {
-    showError('Select a card (above) to sabotage.');
-    return;
-  }
 
   const cardsInShaft = decks.shaft.cards;
   const lastRevealedIndex = cardsInShaft.length-1 - decks.shaft.revealedCount + 1;
@@ -736,6 +736,8 @@ function playCard(cardElement, handIndex) {
         showError('Needs at least 2 revealed cards.');
         return;
       }
+      playArea.addClass('selection-pending');
+      pendingAction = 'sieve';
       $('.card.treasure:not(.face-down)').addClass('swappable');
       break;
     default:
@@ -762,12 +764,25 @@ function updateShaftDeckCounter() {
   }
 })();
 
+function refuseIfActionIsPending() {
+  if (playArea.hasClass('selection-pending')) {
+    console.assert(pendingAction, 'Incorrect play area state, no pending action');
+    const actionName = getCardType(pendingAction).displayName;
+    showError('Select a card for the ' + actionName + ' action');
+    return true;
+  }
+}
+
 $(document).ready(function() {
   playArea = $('#play-area');
   player1Status = $('#player1-status');
   player2Status = $('#player2-status');
 
+  // handle clicks on playable cards
   playArea.on('click', '.card:not(.face-down).playable', function() {
+    if (refuseIfActionIsPending()) {
+      return;
+    }
     const card = $(this);
     const currentPlayerDeck = (currentPlayer === 1)? decks.player1.cards : decks.player2.cards;
     const indexInHand = getCardIndexFromDomElement(currentPlayerDeck, card);
@@ -775,14 +790,17 @@ $(document).ready(function() {
     updateShaftDeckCounter();
   });
 
+  // handle clicks on swappable cards during Sieve action
   const swapPair = [];
-  playArea.on('click', '.card:not(.face-down).swappable', function() {
+  playArea.on('click', '.card:not(.face-down).swappable', function(event) {
     const card = $(this);
-    // note that all the shaft cards are generated, so we can count index amongst them directly
-    const cardIndex = card.index('.card.treasure');
+    const cardIndex = getCardIndexFromDomElement(decks.shaft.cards, card);
     card.addClass('swap-selected');
+    card.removeClass('swappable');
     swapPair.push(cardIndex);
     console.log('swap select:', card, cardIndex);
+    // we stop propagation here to not get an error message for having clicked a treasure card
+    event.stopImmediatePropagation();
     if ($('.swap-selected').length === 2) {
       // swap on UI
       const first = $('.swap-selected').first();
@@ -791,29 +809,41 @@ $(document).ready(function() {
       first.css('left', last.css('left'));
       last.css('left', firstLeft);
       // swap in shaft
+      console.log('before:', deepCopy(decks.shaft.cards));
       const i = swapPair[0];
       const j = swapPair[1];
+      console.log('swapping', i, j);
       const tmp = {
         type: decks.shaft.cards[i].type,
         domElement: decks.shaft.cards[i].domElement
       };
       decks.shaft.cards[i] = decks.shaft.cards[j];
       decks.shaft.cards[j] = tmp;
+      console.log('after:', deepCopy(decks.shaft.cards));
       // cleanup
       swapPair.pop();
       swapPair.pop();
       $('.card').removeClass('swap-selected');
+      $('.card').removeClass('swappable');
+      playArea.removeClass('selection-pending');
+      pendingAction = null;
+      // we disallow propagation, otherwise a treasure could be taken with the same click
+      event.stopImmediatePropagation();
     }
   });
 
+  // handle clicks on treasures in the mineshaft
   playArea.on('click', '.card.treasure:not(.face-down):not(.unavailable):not(.forbidden)', function() {
+    if (refuseIfActionIsPending()) {
+      return;
+    }
     const card = $(this);
-    // note that all the shaft cards are generated, so we can count index amongst them directly
-    const cardIndex = card.index('.card.treasure');
+    const cardIndex = getCardIndexFromDomElement(decks.shaft.cards, card);
     console.log('taking treasure:', card, cardIndex);
     takeTreasure(card, cardIndex);
   });
 
+  // handle card buying clicks
   playArea.on('click', '.card.buyable', function() {
     if (currentRoundIsDigging) {
       showError('Can\'t buy this round - already played cards.');
